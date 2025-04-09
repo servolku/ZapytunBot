@@ -4,7 +4,8 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 
 # from config import TELEGRAM_BOT_TOKEN
-from bot.handlers import start, leaderboard, handle_answer
+# from bot.handlers import start, leaderboard, handle_answer
+from handlers import start, leaderboard, handle_answer  # Якщо запускаєте з папки `bot/`
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
