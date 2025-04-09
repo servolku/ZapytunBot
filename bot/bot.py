@@ -1,9 +1,12 @@
+import os
 import logging
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 
-from config import TELEGRAM_BOT_TOKEN
+# from config import TELEGRAM_BOT_TOKEN
 from bot.handlers import start, leaderboard, handle_answer
+
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 # Enable logging
 logging.basicConfig(
