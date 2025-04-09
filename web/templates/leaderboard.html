@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дошка переможців</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+            text-align: center;
+        }
+        h1 {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            margin: 0;
+        }
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+            width: 80%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+        .telegram-link {
+            margin-top: 20px;
+        }
+        .telegram-link a {
+            text-decoration: none;
+            color: white;
+            background-color: #0088cc;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+        .telegram-link a:hover {
+            background-color: #005f8b;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏆 Дошка переможців 🏆</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>№</th>
+                <th>Ім'я</th>
+                <th>Бали</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for idx, entry in leaderboard %}
+            <tr>
+                <td>{{ idx + 1 }}</td>
+                <td>{{ entry[0] }}</td>
+                <td>{{ entry[1] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="telegram-link">
+        <a href="https://t.me/ZapytunBot">Перейти до бота "Запитун"</a>
+    </div>
+</body>
+</html>
