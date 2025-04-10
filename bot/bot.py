@@ -1,6 +1,8 @@
 import os
 import logging
 from telegram import Update
+from telegram import Bot
+
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 
 # from config import TELEGRAM_BOT_TOKEN
@@ -8,6 +10,12 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 from handlers import start, leaderboard, handle_answer  # Якщо запускаєте з папки `bot/`
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+
+# додав код  для видалення вебхуків
+bot = Bot(token=TELEGRAM_BOT_TOKEN)
+# Видалення вебхука
+bot.delete_webhook(drop_pending_updates=True)
+
 
 # Enable logging
 logging.basicConfig(
