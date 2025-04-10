@@ -1,3 +1,9 @@
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+
+
 from flask import Flask, render_template
 from database.models import get_leaderboard
 
