@@ -1,6 +1,6 @@
-async def ask_question(update, context, new_session=False, query=None):
+async def ask_question(update=None, context=None, new_session=False, query=None):
     """Send a question to the user."""
-    user_id = update.effective_user.id
+    user_id = query.from_user.id if query else update.effective_user.id
     if new_session or user_id not in USER_SESSION:
         USER_SESSION[user_id] = {"current_question": 0, "score": 0}
 
@@ -41,7 +41,7 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = query.from_user.id
 
-    # Переконайтеся, що сесія користувача існує
+    # Ensure the user's session exists
     if user_id not in USER_SESSION:
         await query.edit_message_text(text="❌ Помилка: Сесія не знайдена.")
         return
@@ -49,16 +49,16 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     question_index = USER_SESSION[user_id]["current_question"]
     question = QUESTIONS[question_index]
 
-    # Перевірка відповіді
+    # Check the answer
     if int(query.data) == question["correct"]:
         USER_SESSION[user_id]["score"] += 1
         response = "✅ Правильно!"
     else:
         response = "❌ Неправильно!"
 
-    # Оновлення тексту повідомлення
+    # Update the message with the response
     await query.edit_message_text(text=response)
 
-    # Перехід до наступного питання
+    # Move to the next question
     USER_SESSION[user_id]["current_question"] += 1
-    await ask_question(update, context, query=query)
+    await ask_question(update=None, context=context, query=query)
