@@ -12,7 +12,11 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 bot = Bot(token=TELEGRAM_BOT_TOKEN)
 
 # Видаляємо вебхук, якщо він активний
-bot.delete_webhook(drop_pending_updates=True)
+webhook_deleted = bot.delete_webhook(drop_pending_updates=True)
+if webhook_deleted:
+    logging.info("Webhook successfully deleted.")
+else:
+    logging.warning("Webhook was not active or could not be deleted.")
 
 # Налаштування логування
 logging.basicConfig(
