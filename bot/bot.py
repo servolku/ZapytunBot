@@ -1,13 +1,13 @@
 import os
 import logging
 from telegram import Bot
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 
 import sys
 sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/../"))
 
 # Імпортуємо обробники
-from handlers import start, leaderboard, handle_answer
+from handlers import start, leaderboard, handle_answer, handle_location
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
@@ -36,6 +36,9 @@ app.add_handler(CommandHandler("leaderboard", leaderboard))
 
 # Додаємо обробник для обробки відповідей користувача через callback_query
 app.add_handler(CallbackQueryHandler(handle_answer))
+
+# Додаємо обробник для обробки геолокації користувача
+app.add_handler(MessageHandler(filters.LOCATION, handle_location))
 
 if __name__ == "__main__":
     logger.info("Starting bot...")
