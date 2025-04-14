@@ -1,7 +1,12 @@
 # config.py
 import os
+
 # Telegram Bot Token
-TELEGRAM_BOT_TOKEN = "8121382718:AAFYlfyE9jprJ1tw7Ppb0dPP5AAxxv4oNdQ"
+# Рекомендується зберігати токен у змінній оточення та отримувати його за допомогою os.getenv
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+
+if not TELEGRAM_BOT_TOKEN:
+    raise ValueError("TELEGRAM_BOT_TOKEN не встановлено. Будь ласка, додайте токен до змінних оточення.")
 
 # Database Configuration
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # Абсолютний шлях до кореневої папки проекту
