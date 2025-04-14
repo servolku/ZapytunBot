@@ -6,8 +6,23 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 from flask import Flask, render_template
 from database.models import get_leaderboard
+from database.models import SessionLocal, User
 
 app = Flask(__name__)
+
+@app.route("/test_db")
+def test_db_connection():
+    session = SessionLocal()
+    try:
+        # Перевіряємо, чи є користувачі в базі даних
+        users = session.query(User).all()
+        print("Users in database:", users)
+        return f"Users in database: {users}"
+    except Exception as e:
+        print("Database connection error:", e)
+        return f"Database connection error: {e}"
+    finally:
+        session.close()
 
 @app.route("/")
 def home():
