@@ -24,6 +24,12 @@ def test_db_connection():
     finally:
         session.close()
 
+@app.route("/add_test_user")
+def add_test_user():
+    from database.models import get_or_create_user
+    user = get_or_create_user(1, "Test User")
+    return f"Added user: {user.name} with ID: {user.id}"
+
 @app.route("/")
 def home():
     leaderboard_data = get_leaderboard()
