@@ -46,7 +46,10 @@ app.add_handler(MessageHandler(filters.LOCATION, handle_location))
 # Головна функція для запуску бота
 def main():
     logger.info("Starting bot...")
-    loop = asyncio.get_event_loop()
+
+    # Створення нового циклу подій для уникнення DeprecationWarning
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
     # Видалення вебхука перед запуском
     loop.run_until_complete(remove_webhook())
