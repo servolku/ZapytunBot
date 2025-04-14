@@ -10,8 +10,13 @@ USER_SESSION = {}
 
 def load_questions():
     """Динамічно завантажує файл питань."""
-    with open("bot/questions.json", "r") as f:
-        return json.load(f)
+    file_path = "bot/questions.json"
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"Файл {file_path} не знайдено!")
+    with open(file_path, "r") as f:
+        questions = json.load(f)
+        print(f"Питання завантажені: {questions}")  # Додайте це для перевірки
+        return questions
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обробляє команду /start."""
