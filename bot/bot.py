@@ -15,11 +15,12 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 bot = Bot(token=TELEGRAM_BOT_TOKEN)
 
 # Видаляємо вебхук, якщо він активний
-webhook_deleted = bot.delete_webhook(drop_pending_updates=True)
-if webhook_deleted:
-    logging.info("Webhook successfully deleted.")
-else:
-    logging.warning("Webhook was not active or could not be deleted.")
+async def remove_webhook():
+    webhook_deleted = await bot.delete_webhook(drop_pending_updates=True)
+    if webhook_deleted:
+        logging.info("Webhook successfully deleted.")
+    else:
+        logging.warning("Webhook was not active or could not be deleted.")
 
 # Налаштування логування
 logging.basicConfig(
@@ -37,9 +38,11 @@ app.add_handler(CommandHandler("leaderboard", leaderboard))
 # Додаємо обробник для обробки відповідей користувача через callback_query
 app.add_handler(CallbackQueryHandler(handle_answer))
 
-# Додаємо обробник для обробки геолокації користувача
+# Додаємо обробник для обробки геолокації
 app.add_handler(MessageHandler(filters.LOCATION, handle_location))
 
 if __name__ == "__main__":
     logger.info("Starting bot...")
+    import asyncio
+    asyncio.run(remove_webhook())  # Викликаємо асинхронне видалення вебхука
     app.run_polling()
