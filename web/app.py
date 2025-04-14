@@ -3,7 +3,7 @@ import os
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
-
+from config import DATABASE_URL
 from flask import Flask, render_template
 from database.models import get_leaderboard
 from database.models import SessionLocal, User
