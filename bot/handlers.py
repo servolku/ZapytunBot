@@ -19,15 +19,23 @@ def load_questions():
         return questions
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обробляє команду /start."""
-    user = update.effective_user
-    get_or_create_user(user.id, user.first_name)
-    await update.message.reply_text(
-        f"Привіт, {user.first_name}! Готовий розпочати квест?\n"
-        "Відповідай на запитання, щоб заробити бали!"
-    )
-    # Запитуємо перше питання
-    await ask_question(update, context, new_session=True)
+     """Обробляє команду /start."""
+     from telegram import KeyboardButton, ReplyKeyboardMarkup
+     
+     user = update.effective_user
+     get_or_create_user(user.id, user.first_name)
+     
+     # Додаємо кнопку для запиту геолокації
+     keyboard = [
+         [KeyboardButton("Отримати питання", request_location=True)]
+     ]
+     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True)
+     
+     await update.message.reply_text(
+         f"Привіт, {user.first_name}! Готовий розпочати квест?\n"
+         "Натисни 'Отримати питання', щоб продовжити.",
+         reply_markup=reply_markup
+     )
 
 async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обробляє команду /leaderboard."""
