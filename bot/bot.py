@@ -3,7 +3,7 @@ import logging
 from telegram import Bot
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 
-import asyncio  # Додано для явної роботи з asyncio
+import asyncio
 
 import sys
 sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/../"))
@@ -43,11 +43,16 @@ app.add_handler(CallbackQueryHandler(handle_answer))
 # Додаємо обробник для обробки геолокації
 app.add_handler(MessageHandler(filters.LOCATION, handle_location))
 
-# Головна асинхронна функція
-async def main():
+# Головна функція для запуску бота
+def main():
     logger.info("Starting bot...")
-    await remove_webhook()  # Видалення вебхука перед запуском
-    await app.run_polling()  # Запуск polling
+    loop = asyncio.get_event_loop()
+
+    # Видалення вебхука перед запуском
+    loop.run_until_complete(remove_webhook())
+
+    # Запуск polling
+    app.run_polling()
 
 if __name__ == "__main__":
-    asyncio.run(main())  # Запуск головної асинхронної функції
+    main()
