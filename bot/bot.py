@@ -3,6 +3,9 @@ import logging
 from telegram import Bot
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 
+import sys
+sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/../"))
+
 # Імпортуємо обробники
 from handlers import start, leaderboard, handle_answer
 
