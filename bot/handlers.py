@@ -47,6 +47,9 @@ async def ask_question(update, context, new_session=False):
     questions = load_questions()
     question_index = USER_SESSION[user_id]["current_question"]
 
+    # Логування для перевірки питання
+    print(f"Відправляємо питання {question_index} користувачу {user_id}.")
+
     # Перевіряємо, чи є ще питання
     if question_index >= len(questions):
         await update.message.reply_text(
