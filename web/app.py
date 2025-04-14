@@ -12,6 +12,7 @@ app = Flask(__name__)
 @app.route("/")
 def home():
     leaderboard_data = get_leaderboard()
+    print("Leaderboard data:", leaderboard_data)  # Додайте цей рядок
     return render_template("index.html", bot_name="ZapytunBot", leaderboard=leaderboard_data)
 
 if __name__ == "__main__":
