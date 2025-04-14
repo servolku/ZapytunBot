@@ -3,6 +3,8 @@ import logging
 from telegram import Bot
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 
+import asyncio  # Додано для явної роботи з asyncio
+
 import sys
 sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/../"))
 
@@ -14,7 +16,7 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 # Ініціалізація бота
 bot = Bot(token=TELEGRAM_BOT_TOKEN)
 
-# Видаляємо вебхук, якщо він активний
+# Асинхронне видалення вебхука
 async def remove_webhook():
     webhook_deleted = await bot.delete_webhook(drop_pending_updates=True)
     if webhook_deleted:
@@ -41,8 +43,11 @@ app.add_handler(CallbackQueryHandler(handle_answer))
 # Додаємо обробник для обробки геолокації
 app.add_handler(MessageHandler(filters.LOCATION, handle_location))
 
-if __name__ == "__main__":
+# Головна асинхронна функція
+async def main():
     logger.info("Starting bot...")
-    import asyncio
-    asyncio.run(remove_webhook())  # Викликаємо асинхронне видалення вебхука
-    app.run_polling()
+    await remove_webhook()  # Видалення вебхука перед запуском
+    await app.run_polling()  # Запуск polling
+
+if __name__ == "__main__":
+    asyncio.run(main())  # Запуск головної асинхронної функції
