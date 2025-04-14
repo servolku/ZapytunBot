@@ -47,14 +47,16 @@ async def ask_question(update, context, new_session=False):
     questions = load_questions()
     question_index = USER_SESSION[user_id]["current_question"]
 
-    # Логування для перевірки питання
-    print(f"Відправляємо питання {question_index} користувачу {user_id}.")
-
     # Перевіряємо, чи є ще питання
     if question_index >= len(questions):
-        await update.message.reply_text(
-            f"Гра завершена! Твій підсумковий результат: {USER_SESSION[user_id]['score']} балів."
-        )
+        if update.message:
+            await update.message.reply_text(
+                f"Гра завершена! Твій підсумковий результат: {USER_SESSION[user_id]['score']} балів."
+            )
+        elif update.callback_query:
+            await update.callback_query.message.reply_text(
+                f"Гра завершена! Твій підсумковий результат: {USER_SESSION[user_id]['score']} балів."
+            )
         update_score(user_id, USER_SESSION[user_id]["score"])
         del USER_SESSION[user_id]
         return
@@ -69,7 +71,11 @@ async def ask_question(update, context, new_session=False):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(question["question"], reply_markup=reply_markup)
+    # Відправляємо питання користувачу
+    if update.message:
+        await update.message.reply_text(question["question"], reply_markup=reply_markup)
+    elif update.callback_query:
+        await update.callback_query.message.reply_text(question["question"], reply_markup=reply_markup)
 
 async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обробляє відповідь користувача."""
