@@ -2,11 +2,10 @@ import sys
 import os
 import json
 import logging
+from geopy.distance import geodesic  # Для перевірки дистанції
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from database.models import get_or_create_user, update_score, get_leaderboard
-
-from geopy.distance import geodesic  # Для перевірки дистанції між координатами
 
 # Налаштування логування
 logger = logging.getLogger(__name__)
@@ -18,17 +17,13 @@ def load_questions():
     """Динамічно завантажує файл питань."""
     file_path = "bot/questions.json"
     if not os.path.exists(file_path):
-        logger.error(f"Файл {file_path} не знайдено!")
         raise FileNotFoundError(f"Файл {file_path} не знайдено!")
-    try:
-        with open(file_path, "r") as f:
-            questions = json.load(f)
-            return questions
-    except Exception as e:
-        logger.error(f"Error while loading questions: {e}")
-        raise
+    with open(file_path, "r") as f:
+        questions = json.load(f)
+        return questions
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обробляє команду /start."""
     logger.info(f"Received /start command from user: {update.effective_user.id}")
     user = update.effective_user
     get_or_create_user(user.id, user.first_name)
@@ -36,16 +31,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Привіт, {user.first_name}! Готовий розпочати квест?\n"
         "Натисни кнопку нижче, щоб отримати питання.",
         reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("Отримати питання", callback_data="get_question")]
+            [InlineKeyboardButton("ОТРИМАТИ ПИТАННЯ", callback_data="get_question")]
         ])
     )
 
-async def handle_button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обробляє натискання кнопки 'Отримати питання'."""
+async def handle_get_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обробляє натискання кнопки 'ОТРИМАТИ ПИТАННЯ'."""
     query = update.callback_query
     await query.answer()
 
-    # Надіслати користувачу запит на геолокацію
+    # Надіслати запит на геолокацію
     await query.message.reply_text(
         "Будь ласка, надішліть вашу геолокацію, щоб отримати питання.",
         reply_markup=InlineKeyboardMarkup([
@@ -109,11 +104,3 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"✅ Ви на правильному місці! Ось ваше питання:\n\n{target_question['question']}",
         reply_markup=reply_markup
     )
-
-async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обробляє команду /leaderboard."""
-    leaderboard_data = get_leaderboard()
-    leaderboard_text = "🏆 Дошка переможців 🏆\n\n"
-    for idx, (name, score) in enumerate(leaderboard_data, start=1):
-        leaderboard_text += f"{idx}. {name}: {score} балів\n"
-    await update.message.reply_text(leaderboard_text)
