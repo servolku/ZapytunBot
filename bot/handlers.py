@@ -34,6 +34,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("ОТРИМАТИ ПИТАННЯ", callback_data="get_question")]
         ])
     )
+async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обробляє команду /leaderboard."""
+    leaderboard_data = get_leaderboard()
+    leaderboard_text = "🏆 Дошка переможців 🏆\n\n"
+    for idx, (name, score) in enumerate(leaderboard_data, start=1):
+        leaderboard_text += f"{idx}. {name}: {score} балів\n"
+    await update.message.reply_text(leaderboard_text)
 
 async def handle_get_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обробляє натискання кнопки 'ОТРИМАТИ ПИТАННЯ'."""
