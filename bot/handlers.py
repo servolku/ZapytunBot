@@ -19,17 +19,21 @@ def load_questions():
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обробляє команду /start."""
+    logger.info(f"Received /start command from user: {update.effective_user.id}")
     user = update.effective_user
     get_or_create_user(user.id, user.first_name)
-    location_keyboard = ReplyKeyboardMarkup(
+
+    # Додаємо постійну кнопку "Отримати питання"
+    main_keyboard = ReplyKeyboardMarkup(
         [[KeyboardButton("Отримати питання")]],
-        resize_keyboard=True,  # Робить клавіатуру компактнішою
-        one_time_keyboard=False  # Клавіатура залишається на екрані
+        resize_keyboard=True,
+        one_time_keyboard=False
     )
+
     await update.message.reply_text(
         f"Привіт, {user.first_name}! Готовий розпочати квест?\n"
-        "Натисни кнопку 'Отримати питання', щоб почати.",
-        reply_markup=location_keyboard
+        "Натисни 'Отримати питання', щоб почати.",
+        reply_markup=main_keyboard
     )
 
 async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -95,6 +99,7 @@ async def handle_get_question(update: Update, context: ContextTypes.DEFAULT_TYPE
         "Будь ласка, надішліть вашу геолокацію, щоб отримати питання.",
         reply_markup=location_keyboard
     )
+
 
 async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обробляє відповідь користувача."""
