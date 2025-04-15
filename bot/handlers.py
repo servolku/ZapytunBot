@@ -18,15 +18,13 @@ def load_questions():
         return questions
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обробляє команду /start."""
-    logger.info(f"Received /start command from user: {update.effective_user.id}")
+    logger.info(f"Received /start command from user ID: {update.effective_user.id}")
     user = update.effective_user
     get_or_create_user(user.id, user.first_name)
     await update.message.reply_text(
         f"Привіт, {user.first_name}! Готовий розпочати квест?\n"
         "Відповідай на запитання, щоб заробити бали!"
     )
-    # Запитуємо перше питання
     await ask_question(update, context, new_session=True)
 
 async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -144,8 +142,3 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Перевірка успішності
     await update.message.reply_text("✅ Ваші координати отримано! Продовжуйте.")
 
-async def debug(update: Update, context):
-    print(f"Received update: {update}")
-    logger.info(f"Received update: {update}")
-
-app.add_handler(MessageHandler(filters.ALL, debug))  # Додайте цей обробник для всіх повідомлень
