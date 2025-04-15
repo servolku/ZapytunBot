@@ -1,9 +1,17 @@
 import sys
 import os
 import json
+import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ContextTypes
 from database.models import get_or_create_user, update_score, get_leaderboard
+
+# Ініціалізація логера
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
 
 # Ініціалізація сесій користувачів
 USER_SESSION = {}
