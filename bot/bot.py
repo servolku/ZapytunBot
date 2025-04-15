@@ -59,3 +59,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+async def debug(update: Update, context):
+    print(f"Received update: {update}")
+    logger.info(f"Received update: {update}")
+
+app.add_handler(MessageHandler(filters.ALL, debug))  # Додайте цей обробник для всіх повідомлень
