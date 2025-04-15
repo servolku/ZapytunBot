@@ -7,7 +7,8 @@ import sys
 sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/../"))
 
 # Імпортуємо обробники
-from handlers import start, leaderboard, handle_answer, handle_location, handle_button_click
+from handlers import start, show_leaderboard, handle_answer, handle_location, handle_button_click
+
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
@@ -37,10 +38,10 @@ app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
 # Додаємо обробники команд
 app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("leaderboard", leaderboard))
 app.add_handler(CallbackQueryHandler(handle_button_click, pattern="get_question"))
 app.add_handler(CallbackQueryHandler(handle_answer))
 app.add_handler(MessageHandler(filters.LOCATION, handle_location))
+app.add_handler(CommandHandler("leaderboard", show_leaderboard))
 
 # Головна функція для запуску бота
 def main():
