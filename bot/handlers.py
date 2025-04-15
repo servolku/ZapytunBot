@@ -109,3 +109,11 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"✅ Ви на правильному місці! Ось ваше питання:\n\n{target_question['question']}",
         reply_markup=reply_markup
     )
+
+async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обробляє команду /leaderboard."""
+    leaderboard_data = get_leaderboard()
+    leaderboard_text = "🏆 Дошка переможців 🏆\n\n"
+    for idx, (name, score) in enumerate(leaderboard_data, start=1):
+        leaderboard_text += f"{idx}. {name}: {score} балів\n"
+    await update.message.reply_text(leaderboard_text)
