@@ -1,15 +1,9 @@
 import sys
 import os
 import json
-import logging
-from geopy.distance import geodesic  # Для перевірки дистанції
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram import ReplyKeyboardMarkup, KeyboardButton
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ContextTypes
 from database.models import get_or_create_user, update_score, get_leaderboard
-
-# Налаштування логування
-logger = logging.getLogger(__name__)
 
 # Ініціалізація сесій користувачів
 USER_SESSION = {}
@@ -25,17 +19,20 @@ def load_questions():
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обробляє команду /start."""
-    logger.info(f"Received /start command from user: {update.effective_user.id}")
     user = update.effective_user
     get_or_create_user(user.id, user.first_name)
+    location_keyboard = ReplyKeyboardMarkup(
+        [[KeyboardButton("Отримати питання")]],
+        resize_keyboard=True,  # Робить клавіатуру компактнішою
+        one_time_keyboard=False  # Клавіатура залишається на екрані
+    )
     await update.message.reply_text(
         f"Привіт, {user.first_name}! Готовий розпочати квест?\n"
-        "Натисни кнопку нижче, щоб отримати питання.",
-        reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("ОТРИМАТИ ПИТАННЯ", callback_data="get_question")]
-        ])
+        "Натисни кнопку 'Отримати питання', щоб почати.",
+        reply_markup=location_keyboard
     )
-async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обробляє команду /leaderboard."""
     leaderboard_data = get_leaderboard()
     leaderboard_text = "🏆 Дошка переможців 🏆\n\n"
@@ -43,23 +40,38 @@ async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
         leaderboard_text += f"{idx}. {name}: {score} балів\n"
     await update.message.reply_text(leaderboard_text)
 
-async def handle_get_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обробляє натискання кнопки 'ОТРИМАТИ ПИТАННЯ'."""
-    query = update.callback_query
-    await query.answer()
+async def ask_question(update, context, new_session=False):
+    """Відправляє наступне питання користувачу."""
+    user_id = update.effective_user.id
+    if new_session or user_id not in USER_SESSION:
+        USER_SESSION[user_id] = {"current_question": 0, "score": 0}
 
-    # Створюємо клавіатуру для запиту геолокації
-    location_keyboard = ReplyKeyboardMarkup(
-        [[KeyboardButton("Надіслати геолокацію", request_location=True)]],
-        resize_keyboard=True,  # Робить клавіатуру компактнішою
-        one_time_keyboard=True  # Клавіатура зникне після вибору
-    )
+    # Динамічно завантажуємо питання
+    questions = load_questions()
+    question_index = USER_SESSION[user_id]["current_question"]
 
-    # Надсилаємо повідомлення з клавіатурою для геолокації
-    await query.message.reply_text(
-        "Будь ласка, надішліть вашу геолокацію, щоб отримати питання.",
-        reply_markup=location_keyboard
-    )
+    # Перевіряємо, чи є ще питання
+    if question_index >= len(questions):
+        await update.message.reply_text(
+            f"Гра завершена! Твій підсумковий результат: {USER_SESSION[user_id]['score']} балів.\n"
+            "Натисни 'Отримати питання', щоб почати знову."
+        )
+        update_score(user_id, USER_SESSION[user_id]["score"])
+        del USER_SESSION[user_id]
+        return
+
+    question = questions[question_index]
+    options = question["options"]
+
+    # Створюємо клавіатуру для відповідей
+    keyboard = [
+        [InlineKeyboardButton(option, callback_data=str(idx))]
+        for idx, option in enumerate(options)
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    # Відправляємо питання користувачу
+    await update.message.reply_text(question["question"], reply_markup=reply_markup)
 
 async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обробляє відповідь користувача."""
@@ -90,7 +102,7 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Переходимо до наступного питання
     USER_SESSION[user_id]["current_question"] += 1
-    await ask_question(update, context)
+    await update.callback_query.message.reply_text("Перейдіть до наступної локації.")
 
 async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обробляє геолокацію, яку надсилає користувач."""
@@ -125,26 +137,5 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Для цього питання не задано координат.")
         return
 
-    # Перевіряємо відстань до цільової точки
-    user_coords = (user_location.latitude, user_location.longitude)
-    target_coords = (target_lat, target_lon)
-
-    distance = geodesic(user_coords, target_coords).meters
-    if distance > 20:
-        await update.message.reply_text(
-            f"❌ Ви занадто далеко від цільової точки. Відстань: {distance:.2f} метрів. Підходьте ближче!"
-        )
-        return
-
-    # Якщо користувач в межах 20 метрів, надсилаємо питання
-    options = target_question["options"]
-    keyboard = [
-        [InlineKeyboardButton(option, callback_data=str(idx))]
-        for idx, option in enumerate(options)
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    await update.message.reply_text(
-        f"✅ Ви на правильному місці! Ось ваше питання:\n\n{target_question['question']}",
-        reply_markup=reply_markup
-    )
+    # Перевірка успішності
+    await update.message.reply_text("✅ Ваші координати отримано! Продовжуйте.")
