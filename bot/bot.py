@@ -7,7 +7,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/../"))
 
 # Імпортуємо обробники
-from handlers import start, leaderboard, handle_answer, handle_location, handle_get_question
+from handlers import start, show_leaderboard, handle_answer, handle_location, handle_get_question
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
@@ -33,7 +33,7 @@ app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
 # Додаємо обробники команд
 app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("leaderboard", leaderboard))
+app.add_handler(CommandHandler("leaderboard", show_leaderboard))
 
 # Додаємо обробник для кнопки "ОТРИМАТИ ПИТАННЯ"
 app.add_handler(CallbackQueryHandler(handle_get_question, pattern="get_question"))
