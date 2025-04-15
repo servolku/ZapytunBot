@@ -32,7 +32,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Додаємо постійну кнопку "Отримати питання"
     main_keyboard = ReplyKeyboardMarkup(
-        [[KeyboardButton("Отримати питання")]],
+        [["Отримати питання"]],
         resize_keyboard=True,
         one_time_keyboard=False
     )
