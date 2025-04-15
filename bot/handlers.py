@@ -18,7 +18,7 @@ def load_questions():
         return questions
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    logger.info(f"Received /start command from user ID: {update.effective_user.id}")
+    logger.info(f"Received /start command from user: {update.effective_user.id}")
     user = update.effective_user
     get_or_create_user(user.id, user.first_name)
     await update.message.reply_text(
