@@ -143,3 +143,9 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Перевірка успішності
     await update.message.reply_text("✅ Ваші координати отримано! Продовжуйте.")
+
+async def debug(update: Update, context):
+    print(f"Received update: {update}")
+    logger.info(f"Received update: {update}")
+
+app.add_handler(MessageHandler(filters.ALL, debug))  # Додайте цей обробник для всіх повідомлень
