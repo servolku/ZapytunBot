@@ -69,10 +69,12 @@ if __name__ == "__main__":
 async def debug(update: Update, context):
     logger.info(f"Received update: {update}")
     if update.message:
+        logger.info(f"Message text: {update.message.text}")
         await update.message.reply_text(f"Debug: Received your message: {update.message.text}")
     elif update.callback_query:
+        logger.info("Callback received!")
         await update.callback_query.answer("Debug: Callback received!")
     else:
+        logger.info("Unknown update type.")
         await context.bot.send_message(chat_id=update.effective_chat.id, text="Debug: Unknown update type.")
-
 app.add_handler(MessageHandler(filters.ALL, debug))
