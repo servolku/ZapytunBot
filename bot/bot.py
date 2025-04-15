@@ -37,7 +37,8 @@ app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("leaderboard", show_leaderboard))
 
 # Додаємо обробник для кнопки "ОТРИМАТИ ПИТАННЯ"
-app.add_handler(CommandHandler("get_question", handle_get_question))
+#app.add_handler(CommandHandler("get_question", handle_get_question))
+app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^Отримати питання$"), handle_get_question))
 
 # Додаємо обробник для геолокації
 app.add_handler(MessageHandler(filters.LOCATION, handle_location))
