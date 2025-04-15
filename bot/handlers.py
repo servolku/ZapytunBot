@@ -44,6 +44,21 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=main_keyboard
     )
 
+async def handle_get_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обробляє запит на отримання питання."""
+    # Створюємо клавіатуру для запиту геолокації
+    location_keyboard = ReplyKeyboardMarkup(
+        [[KeyboardButton("Надіслати геолокацію", request_location=True)]],
+        resize_keyboard=True,  # Робить клавіатуру компактнішою
+        one_time_keyboard=True  # Клавіатура зникне після вибору
+    )
+
+    # Надсилаємо повідомлення з клавіатурою для геолокації
+    await update.message.reply_text(
+        "Будь ласка, надішліть вашу геолокацію, щоб отримати питання.",
+        reply_markup=location_keyboard
+    )
+
 async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обробляє команду /leaderboard."""
     leaderboard_data = get_leaderboard()
@@ -92,22 +107,6 @@ async def ask_question(update, context, new_session=False):
 
     # Відправляємо питання користувачу
     await update.message.reply_text(question["question"], reply_markup=reply_markup)
-
-async def handle_get_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обробляє запит на отримання питання."""
-    # Створюємо клавіатуру для запиту геолокації
-    location_keyboard = ReplyKeyboardMarkup(
-        [[KeyboardButton("Надіслати геолокацію", request_location=True)]],
-        resize_keyboard=True,  # Робить клавіатуру компактнішою
-        one_time_keyboard=True  # Клавіатура зникне після вибору
-    )
-
-    # Надсилаємо повідомлення з клавіатурою для геолокації
-    await update.message.reply_text(
-        "Будь ласка, надішліть вашу геолокацію, щоб отримати питання.",
-        reply_markup=location_keyboard
-    )
-
 
 async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обробляє відповідь користувача."""
