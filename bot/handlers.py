@@ -55,6 +55,37 @@ async def handle_get_question(update: Update, context: ContextTypes.DEFAULT_TYPE
         ])
     )
 
+async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обробляє відповідь користувача."""
+    query = update.callback_query
+    await query.answer()
+
+    user_id = query.from_user.id
+
+    # Переконайтеся, що сесія користувача існує
+    if user_id not in USER_SESSION:
+        await query.edit_message_text(text="❌ Помилка: Сесія не знайдена.")
+        return
+
+    # Динамічно завантажуємо питання
+    questions = load_questions()
+    question_index = USER_SESSION[user_id]["current_question"]
+    question = questions[question_index]
+
+    # Перевіряємо відповідь
+    if int(query.data) == question["correct"]:
+        USER_SESSION[user_id]["score"] += 1
+        response = "✅ Правильно!"
+    else:
+        response = "❌ Неправильно!"
+
+    # Оновлюємо текст повідомлення
+    await query.edit_message_text(text=response)
+
+    # Переходимо до наступного питання
+    USER_SESSION[user_id]["current_question"] += 1
+    await ask_question(update, context)
+
 async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обробляє геолокацію, яку надсилає користувач."""
     user_location = update.message.location
