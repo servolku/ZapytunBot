@@ -13,6 +13,10 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/../"))
 from handlers import start, leaderboard, handle_answer, handle_location
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+if not TELEGRAM_BOT_TOKEN:
+    logger.error("TELEGRAM_BOT_TOKEN is not set!")
+else:
+    logger.info(f"Using TELEGRAM_BOT_TOKEN: {TELEGRAM_BOT_TOKEN}")
 
 # Ініціалізація бота
 bot = Bot(token=TELEGRAM_BOT_TOKEN)
