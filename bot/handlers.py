@@ -4,6 +4,7 @@ import json
 import logging
 from geopy.distance import geodesic  # Для перевірки дистанції
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ContextTypes
 from database.models import get_or_create_user, update_score, get_leaderboard
 
@@ -47,12 +48,17 @@ async def handle_get_question(update: Update, context: ContextTypes.DEFAULT_TYPE
     query = update.callback_query
     await query.answer()
 
-    # Надіслати запит на геолокацію
+    # Створюємо клавіатуру для запиту геолокації
+    location_keyboard = ReplyKeyboardMarkup(
+        [[KeyboardButton("Надіслати геолокацію", request_location=True)]],
+        resize_keyboard=True,  # Робить клавіатуру компактнішою
+        one_time_keyboard=True  # Клавіатура зникне після вибору
+    )
+
+    # Надсилаємо повідомлення з клавіатурою для геолокації
     await query.message.reply_text(
         "Будь ласка, надішліть вашу геолокацію, щоб отримати питання.",
-        reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("Надіслати геолокацію", request_location=True)]
-        ])
+        reply_markup=location_keyboard
     )
 
 async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
