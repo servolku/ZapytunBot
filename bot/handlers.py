@@ -45,6 +45,23 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_get_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обробляє запит на отримання питання."""
+    user_id = update.effective_user.id
+
+    # Перевіряємо, чи є активна сесія для користувача
+    if user_id not in USER_SESSION:
+        USER_SESSION[user_id] = {"current_question": 0, "score": 0}
+
+    # Завантажуємо питання
+    questions = load_questions()
+    question_index = USER_SESSION[user_id]["current_question"]
+
+    # Перевіряємо, чи є ще питання
+    if question_index >= len(questions):
+        await update.message.reply_text(
+            "Всі питання завершені. Щоб почати знову, натисніть /start."
+        )
+        return
+
     # Створюємо клавіатуру для запиту геолокації
     location_keyboard = ReplyKeyboardMarkup(
         [[KeyboardButton("Надіслати геолокацію", request_location=True)]],
@@ -52,11 +69,59 @@ async def handle_get_question(update: Update, context: ContextTypes.DEFAULT_TYPE
         one_time_keyboard=True  # Клавіатура зникне після вибору
     )
 
-    # Надсилаємо повідомлення з клавіатурою для геолокації
+    # Надсилаємо запит на геолокацію
     await update.message.reply_text(
-        "Будь ласка, надішліть вашу геолокацію, щоб отримати питання.",
+        "Будь ласка, надішліть вашу геолокацію.",
         reply_markup=location_keyboard
     )
+
+async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обробляє геолокацію, яку надсилає користувач."""
+    user_location = update.message.location
+    user_id = update.effective_user.id
+
+    if not user_location:
+        await update.message.reply_text("❌ Ви не надали геолокацію. Спробуйте ще раз.")
+        return
+
+    # Перевіряємо, чи є активна сесія для користувача
+    if user_id not in USER_SESSION:
+        USER_SESSION[user_id] = {"current_question": 0, "score": 0}
+
+    # Завантажуємо питання
+    questions = load_questions()
+    question_index = USER_SESSION[user_id]["current_question"]
+
+    # Перевіряємо, чи є ще питання
+    if question_index >= len(questions):
+        await update.message.reply_text(
+            "Всі питання завершені. Щоб почати знову, натисніть /start."
+        )
+        return
+
+    # Перевіряємо координати
+    target_question = questions[question_index]
+    target_lat = target_question.get("latitude")
+    target_lon = target_question.get("longitude")
+
+    if not target_lat or not target_lon:
+        await update.message.reply_text("❌ Для цього питання не задано координат.")
+        return
+
+    # Якщо користувач знаходиться в межах радіусу 0.005 градусів
+    if abs(user_location.latitude - target_lat) <= 0.005 and abs(user_location.longitude - target_lon) <= 0.005:
+        # Надсилаємо питання
+        options = target_question["options"]
+        keyboard = [
+            [InlineKeyboardButton(option, callback_data=str(idx))]
+            for idx, option in enumerate(options)
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await update.message.reply_text(target_question["question"], reply_markup=reply_markup)
+    else:
+        await update.message.reply_text("❌ Ви не знаходитеся в потрібній локації. Спробуйте ще раз.")
+
 
 async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обробляє команду /leaderboard."""
@@ -138,38 +203,4 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     USER_SESSION[user_id]["current_question"] += 1
     await update.callback_query.message.reply_text("Перейдіть до наступної локації.")
 
-async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обробляє геолокацію, яку надсилає користувач."""
-    user_location = update.message.location
-    if not user_location:
-        await update.message.reply_text("❌ Ви не надали геолокацію. Спробуйте ще раз.")
-        return
 
-    user_id = update.effective_user.id
-
-    # Ініціалізація сесії, якщо її немає
-    if user_id not in USER_SESSION:
-        USER_SESSION[user_id] = {"current_question": 0, "score": 0}
-
-    # Завантажуємо питання
-    questions = load_questions()
-    question_index = USER_SESSION[user_id]["current_question"]
-
-    # Перевіряємо, чи є ще питання
-    if question_index >= len(questions):
-        await update.message.reply_text(
-            "Завдання завершені. Почніть нову гру."
-        )
-        return
-
-    # Обробляємо координати
-    target_question = questions[question_index]
-    target_lat = target_question.get("latitude")
-    target_lon = target_question.get("longitude")
-
-    if target_lat is None or target_lon is None:
-        await update.message.reply_text("❌ Для цього питання не задано координат.")
-        return
-
-    # Перевірка успішності
-    await update.message.reply_text("✅ Ваші координати отримано! Продовжуйте.")
