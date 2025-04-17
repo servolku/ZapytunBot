@@ -22,8 +22,8 @@ def load_questions():
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Файл {file_path} не знайдено!")
     with open(file_path, "r") as f:
-        questions = json.load(f)
-        return questions
+        data = json.load(f)
+        return data
 
 def haversine(lat1, lon1, lat2, lon2):
     """Обчислює відстань між двома точками (GPS) у метрах."""
@@ -41,7 +41,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     get_or_create_user(user.id, user.first_name)
 
-    # Додаємо постійну кнопку "Отримати питання"
+    questions_data = load_questions()
+    quest_name = questions_data.get("quest_name", "Квест")
+
     main_keyboard = ReplyKeyboardMarkup(
         [["Отримати питання"]],
         resize_keyboard=True,
@@ -49,7 +51,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     await update.message.reply_text(
-        f"Привіт, {user.first_name}! Готовий розпочати квест?\n"
+        f"Привіт, {user.first_name}! Готовий розпочати «{quest_name}»?\n"
         "Натисни 'Отримати питання', щоб почати.",
         reply_markup=main_keyboard
     )
