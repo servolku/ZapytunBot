@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 USER_SESSION = {}
 
 def load_questions():
-    """Динамічно завантажує файл питань."""
+    """Динамічно завантажує файл питань та параметрів квесту."""
     file_path = "bot/questions.json"
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Файл {file_path} не знайдено!")
@@ -44,6 +44,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     questions_data = load_questions()
     quest_name = questions_data.get("quest_name", "Квест")
 
+    # Додаємо постійну кнопку "Отримати питання"
     main_keyboard = ReplyKeyboardMarkup(
         [["Отримати питання"]],
         resize_keyboard=True,
@@ -65,7 +66,8 @@ async def handle_get_question(update: Update, context: ContextTypes.DEFAULT_TYPE
         USER_SESSION[user_id] = {"current_question": 0, "score": 0}
 
     # Завантажуємо питання
-    questions = load_questions()
+    questions_data = load_questions()
+    questions = questions_data["questions"]
     question_index = USER_SESSION[user_id]["current_question"]
 
     # Перевіряємо, чи є ще питання
@@ -102,7 +104,8 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
         USER_SESSION[user_id] = {"current_question": 0, "score": 0}
 
     # Завантажуємо питання
-    questions = load_questions()
+    questions_data = load_questions()
+    questions = questions_data["questions"]
     question_index = USER_SESSION[user_id]["current_question"]
 
     # Перевіряємо, чи є ще питання
@@ -121,7 +124,10 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Для цього питання не задано координат.")
         return
 
+    # Визначаємо дистанцію
     distance = haversine(user_location.latitude, user_location.longitude, target_lat, target_lon)
+
+    # Якщо користувач знаходиться в межах радіусу 10 метрів
     if distance <= 10:
         # Надсилаємо питання
         options = target_question["options"]
@@ -130,7 +136,6 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
             for idx, option in enumerate(options)
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
-
         await update.message.reply_text(target_question["question"], reply_markup=reply_markup)
     else:
         await update.message.reply_text(
@@ -160,7 +165,8 @@ async def ask_question(update, context, new_session=False):
         USER_SESSION[user_id] = {"current_question": 0, "score": 0}
 
     # Динамічно завантажуємо питання
-    questions = load_questions()
+    questions_data = load_questions()
+    questions = questions_data["questions"]
     question_index = USER_SESSION[user_id]["current_question"]
 
     # Перевіряємо, чи є ще питання
@@ -199,7 +205,8 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # Динамічно завантажуємо питання
-    questions = load_questions()
+    questions_data = load_questions()
+    questions = questions_data["questions"]
     question_index = USER_SESSION[user_id]["current_question"]
     question = questions[question_index]
 
