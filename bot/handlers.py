@@ -2,6 +2,7 @@ import sys
 import os
 import json
 import logging
+import math
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ContextTypes
 from database.models import get_or_create_user, update_score, get_leaderboard
@@ -11,7 +12,6 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 logger = logging.getLogger(__name__)
-
 
 # Ініціалізація сесій користувачів
 USER_SESSION = {}
@@ -24,6 +24,17 @@ def load_questions():
     with open(file_path, "r") as f:
         questions = json.load(f)
         return questions
+
+def haversine(lat1, lon1, lat2, lon2):
+    """Обчислює відстань між двома точками (GPS) у метрах."""
+    R = 6371000  # Радіус Землі в метрах
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
+    a = math.sin(delta_phi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return R * c
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(f"Received /start command from user: {update.effective_user.id}")
@@ -108,8 +119,8 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Для цього питання не задано координат.")
         return
 
-    # Якщо користувач знаходиться в межах радіусу 0.005 градусів
-    if abs(user_location.latitude - target_lat) <= 0.005 and abs(user_location.longitude - target_lon) <= 0.005:
+    distance = haversine(user_location.latitude, user_location.longitude, target_lat, target_lon)
+    if distance <= 10:
         # Надсилаємо питання
         options = target_question["options"]
         keyboard = [
@@ -120,8 +131,9 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.message.reply_text(target_question["question"], reply_markup=reply_markup)
     else:
-        await update.message.reply_text("❌ Ви не знаходитеся в потрібній локації. Спробуйте ще раз.")
-
+        await update.message.reply_text(
+            f"❌ Ви не знаходитеся в потрібній локації. Ваша відстань до цілі: {int(distance)} м. Спробуйте ще раз."
+        )
 
 async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обробляє команду /leaderboard."""
@@ -202,5 +214,3 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Переходимо до наступного питання
     USER_SESSION[user_id]["current_question"] += 1
     await update.callback_query.message.reply_text("Перейдіть до наступної локації.")
-
-
