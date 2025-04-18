@@ -3,21 +3,24 @@ import os
 import json
 import logging
 import math
+from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ContextTypes
-from database.models import get_or_create_user, update_score, get_leaderboard
+from database.models import (
+    get_or_create_user,
+    start_quest_for_user,
+    finish_quest_for_user,
+    get_leaderboard_for_quest
+)
 
-# Ініціалізація логера
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
-# Ініціалізація сесій користувачів
 USER_SESSION = {}
 
 def load_questions():
-    """Динамічно завантажує файл питань та параметрів квесту."""
     file_path = "bot/questions.json"
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Файл {file_path} не знайдено!")
@@ -25,9 +28,12 @@ def load_questions():
         data = json.load(f)
         return data
 
+def get_current_quest_id():
+    data = load_questions()
+    return data.get("quest_id", "default-quest")
+
 def haversine(lat1, lon1, lat2, lon2):
-    """Обчислює відстань між двома точками (GPS) у метрах."""
-    R = 6371000  # Радіус Землі в метрах
+    R = 6371000
     phi1 = math.radians(lat1)
     phi2 = math.radians(lat2)
     delta_phi = math.radians(lat2 - lat1)
@@ -40,11 +46,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(f"Received /start command from user: {update.effective_user.id}")
     user = update.effective_user
     get_or_create_user(user.id, user.first_name)
+    USER_SESSION[user.id] = {"current_question": 0, "score": 0}
 
     questions_data = load_questions()
+    quest_id = questions_data.get("quest_id", "default-quest")
     quest_name = questions_data.get("quest_name", "Квест")
 
-    # Додаємо постійну кнопку "Отримати питання"
+    # Зберігаємо старт квесту
+    start_quest_for_user(user.id, quest_id, user.first_name)
+
     main_keyboard = ReplyKeyboardMarkup(
         [["Отримати питання"]],
         resize_keyboard=True,
@@ -58,40 +68,30 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def handle_get_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обробляє запит на отримання питання."""
     user_id = update.effective_user.id
-
-    # Перевіряємо, чи є активна сесія для користувача
     if user_id not in USER_SESSION:
         USER_SESSION[user_id] = {"current_question": 0, "score": 0}
 
-    # Завантажуємо питання
     questions_data = load_questions()
     questions = questions_data["questions"]
     question_index = USER_SESSION[user_id]["current_question"]
 
-    # Перевіряємо, чи є ще питання
     if question_index >= len(questions):
-        await update.message.reply_text(
-            "Всі питання завершені. Щоб почати знову, натисніть /start."
-        )
+        await update.message.reply_text("Всі питання завершені. Щоб почати знову, натисніть /start.")
         return
 
-    # Створюємо клавіатуру для запиту геолокації
     location_keyboard = ReplyKeyboardMarkup(
         [[KeyboardButton("Надіслати геолокацію", request_location=True)]],
-        resize_keyboard=True,  # Робить клавіатуру компактнішою
-        one_time_keyboard=True  # Клавіатура зникне після вибору
+        resize_keyboard=True,
+        one_time_keyboard=True
     )
 
-    # Надсилаємо запит на геолокацію
     await update.message.reply_text(
         "Будь ласка, надішліть вашу геолокацію.",
         reply_markup=location_keyboard
     )
 
 async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обробляє геолокацію, яку надсилає користувач."""
     user_location = update.message.location
     user_id = update.effective_user.id
 
@@ -99,23 +99,17 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Ви не надали геолокацію. Спробуйте ще раз.")
         return
 
-    # Перевіряємо, чи є активна сесія для користувача
     if user_id not in USER_SESSION:
         USER_SESSION[user_id] = {"current_question": 0, "score": 0}
 
-    # Завантажуємо питання
     questions_data = load_questions()
     questions = questions_data["questions"]
     question_index = USER_SESSION[user_id]["current_question"]
 
-    # Перевіряємо, чи є ще питання
     if question_index >= len(questions):
-        await update.message.reply_text(
-            "Всі питання завершені. Щоб почати знову, натисніть /start."
-        )
+        await update.message.reply_text("Всі питання завершені. Щоб почати знову, натисніть /start.")
         return
 
-    # Перевіряємо координати
     target_question = questions[question_index]
     target_lat = target_question.get("latitude")
     target_lon = target_question.get("longitude")
@@ -124,12 +118,8 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Для цього питання не задано координат.")
         return
 
-    # Визначаємо дистанцію
     distance = haversine(user_location.latitude, user_location.longitude, target_lat, target_lon)
-
-    # Якщо користувач знаходиться в межах радіусу 10 метрів
     if distance <= 10:
-        # Надсилаємо питання
         options = target_question["options"]
         keyboard = [
             [InlineKeyboardButton(option, callback_data=str(idx))]
@@ -142,84 +132,58 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"❌ Ви не знаходитеся в потрібній локації. Ваша відстань до цілі: {int(distance)} м. Спробуйте ще раз."
         )
 
-async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обробляє команду /leaderboard."""
-    leaderboard_data = get_leaderboard()
-    leaderboard_text = "🏆 Дошка переможців 🏆\n\n"
-    for idx, (name, score) in enumerate(leaderboard_data, start=1):
-        leaderboard_text += f"{idx}. {name}: {score} балів\n"
-    await update.message.reply_text(leaderboard_text)
-
-async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обробляє команду /leaderboard."""
-    leaderboard_data = get_leaderboard()
-    leaderboard_text = "🏆 Дошка переможців 🏆\n\n"
-    for idx, (name, score) in enumerate(leaderboard_data, start=1):
-        leaderboard_text += f"{idx}. {name}: {score} балів\n"
-    await update.message.reply_text(leaderboard_text)
-
-async def ask_question(update, context, new_session=False):
-    """Відправляє наступне питання користувачу."""
-    user_id = update.effective_user.id
-    if new_session or user_id not in USER_SESSION:
-        USER_SESSION[user_id] = {"current_question": 0, "score": 0}
-
-    # Динамічно завантажуємо питання
-    questions_data = load_questions()
-    questions = questions_data["questions"]
-    question_index = USER_SESSION[user_id]["current_question"]
-
-    # Перевіряємо, чи є ще питання
-    if question_index >= len(questions):
-        await update.message.reply_text(
-            f"Гра завершена! Твій підсумковий результат: {USER_SESSION[user_id]['score']} балів.\n"
-            "Натисни 'Отримати питання', щоб почати знову."
-        )
-        update_score(user_id, USER_SESSION[user_id]["score"])
-        del USER_SESSION[user_id]
-        return
-
-    question = questions[question_index]
-    options = question["options"]
-
-    # Створюємо клавіатуру для відповідей
-    keyboard = [
-        [InlineKeyboardButton(option, callback_data=str(idx))]
-        for idx, option in enumerate(options)
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    # Відправляємо питання користувачу
-    await update.message.reply_text(question["question"], reply_markup=reply_markup)
-
 async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обробляє відповідь користувача."""
     query = update.callback_query
     await query.answer()
 
     user_id = query.from_user.id
-
-    # Переконайтеся, що сесія користувача існує
     if user_id not in USER_SESSION:
         await query.edit_message_text(text="❌ Помилка: Сесія не знайдена.")
         return
 
-    # Динамічно завантажуємо питання
     questions_data = load_questions()
     questions = questions_data["questions"]
+    quest_id = questions_data.get("quest_id", "default-quest")
     question_index = USER_SESSION[user_id]["current_question"]
     question = questions[question_index]
 
-    # Перевіряємо відповідь
     if int(query.data) == question["correct"]:
         USER_SESSION[user_id]["score"] += 1
         response = "✅ Правильно!"
     else:
         response = "❌ Неправильно!"
 
-    # Оновлюємо текст повідомлення
     await query.edit_message_text(text=response)
 
-    # Переходимо до наступного питання
     USER_SESSION[user_id]["current_question"] += 1
-    await update.callback_query.message.reply_text("Перейдіть до наступної локації.")
+
+    if USER_SESSION[user_id]["current_question"] >= len(questions):
+        # Фінішуємо квест для користувача
+        finish_quest_for_user(
+            user_id,
+            quest_id,
+            USER_SESSION[user_id]["score"]
+        )
+        await update.callback_query.message.reply_text(
+            f"Квест завершено! Твій підсумковий результат: {USER_SESSION[user_id]['score']} балів.\n"
+            "Щоб пройти ще раз — натисни /start."
+        )
+        del USER_SESSION[user_id]
+    else:
+        await update.callback_query.message.reply_text("Перейдіть до наступної локації.")
+
+async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    questions_data = load_questions()
+    quest_id = questions_data.get("quest_id", "default-quest")
+    quest_name = questions_data.get("quest_name", "Квест")
+    leaderboard_data = get_leaderboard_for_quest(quest_id)
+    leaderboard_text = f"🏆 Дошка переможців для «{quest_name}» 🏆\n\n"
+    if not leaderboard_data:
+        leaderboard_text += "Немає учасників."
+    else:
+        for idx, (name, score, duration) in enumerate(leaderboard_data, start=1):
+            mins = int(duration) // 60
+            secs = int(duration) % 60
+            time_str = f"{mins} хв {secs} сек"
+            leaderboard_text += f"{idx}. {name}: {score} балів, час: {time_str}\n"
+    await update.message.reply_text(leaderboard_text)
