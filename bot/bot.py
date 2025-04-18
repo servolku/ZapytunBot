@@ -8,15 +8,11 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/../"))
 
 # Імпортуємо обробники
 from handlers import start, show_leaderboard, handle_answer, handle_location, handle_get_question
-from handlers import leaderboard
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 # Ініціалізація бота
 bot = Bot(token=TELEGRAM_BOT_TOKEN)
-
-from database.models import create_tables
-create_tables()
 
 # Асинхронне видалення вебхука
 async def remove_webhook():
@@ -40,7 +36,6 @@ app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("leaderboard", show_leaderboard))
 
 # Додаємо обробник для кнопки "ОТРИМАТИ ПИТАННЯ"
-#app.add_handler(CommandHandler("get_question", handle_get_question))
 app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^Отримати питання$"), handle_get_question))
 
 # Додаємо обробник для геолокації
