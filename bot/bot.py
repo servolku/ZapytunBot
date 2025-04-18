@@ -6,6 +6,9 @@ from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandle
 import sys
 sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/../"))
 
+from database.models import create_tables
+create_tables()
+
 # Імпортуємо обробники
 from handlers import start, show_leaderboard, handle_answer, handle_location, handle_get_question
 
