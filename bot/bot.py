@@ -1,15 +1,17 @@
 import os
 import logging
 import asyncio
-from telegram import Bot
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 import sys
 sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/../"))
 
+# 1. СТВОРІТЬ ТАБЛИЦІ ДО ІМПОРТУ HANDLERS!
 from database.models import create_tables
 create_tables()
 
-# Імпортуємо обробники
+from telegram import Bot
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters
+
+# Тепер імпортуйте обробники
 from handlers import start, show_leaderboard, handle_answer, handle_location, handle_get_question
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
