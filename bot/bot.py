@@ -15,6 +15,9 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 # Ініціалізація бота
 bot = Bot(token=TELEGRAM_BOT_TOKEN)
 
+from database.models import create_tables
+create_tables()
+
 # Асинхронне видалення вебхука
 async def remove_webhook():
     webhook_deleted = await bot.delete_webhook(drop_pending_updates=True)
