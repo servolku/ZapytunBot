@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
@@ -8,38 +9,23 @@ from flask import Flask, render_template
 from database.models import get_leaderboard_for_quest
 from database.models import Session, User
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+QUESTIONS_PATH = os.path.join(BASE_DIR, "..", "bot", "questions.json")
+
+def get_quest_id():
+    with open(QUESTIONS_PATH, encoding="utf-8") as f:
+        data = json.load(f)
+    return data["quest_id"]
+
 app = Flask(__name__)
-
-@app.route("/test_db")
-def test_db_connection():
-    session = Session()
-    try:
-        # Перевіряємо, чи є користувачі в базі даних
-        users = session.query(User).all()
-        print("Users in database:", users)
-        return f"Users in database: {users}"
-    except Exception as e:
-        print("Database connection error:", e)
-        return f"Database connection error: {e}"
-    finally:
-        session.close()
-
-@app.route("/add_test_user")
-def add_test_user():
-    from database.models import get_or_create_user
-    user = get_or_create_user(1, "Test User")
-    return f"Added user: {user.name} with ID: {user.id}"
 
 @app.route("/")
 def home():
-    quest_id = "ukraine-quest-test"
+    quest_id = get_quest_id()
     leaderboard_data = [
         (name, score, format_duration(duration))
         for name, score, duration in get_leaderboard_for_quest(quest_id)
     ]
-    print("DEBUG leaderboard_data:", leaderboard_data)
-    with open("/tmp/flask_leaderboard.log", "a") as f:
-        f.write(f"DEBUG leaderboard_data: {leaderboard_data}\n")
     return render_template("index.html", bot_name="ZapytunBot", leaderboard=leaderboard_data)
 
 def format_duration(seconds):
@@ -48,22 +34,6 @@ def format_duration(seconds):
     minutes = int(seconds) // 60
     seconds = int(seconds) % 60
     return f"{minutes} хв {seconds} сек"
-
-@app.route("/debug_all_quests")
-def debug_all_quests():
-    from database.models import Session, QuestResult
-    session = Session()
-    quest_ids = session.query(QuestResult.quest_id).distinct().all()
-    session.close()
-    return f"Quest IDs in DB: {quest_ids}"
-
-@app.route("/debug_leaderboard_raw")
-def debug_leaderboard_raw():
-    from database.models import get_leaderboard_for_quest
-    quest_id = "ukraine-quest-test"  # підстав сюди реальний quest_id з попереднього кроку
-    leaderboard = get_leaderboard_for_quest(quest_id)
-    return f"Leaderboard data for {quest_id}: {leaderboard}"
-
 
 if __name__ == "__main__":
     import os
