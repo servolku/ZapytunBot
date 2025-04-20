@@ -6,13 +6,13 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from config import DATABASE_URL
 from flask import Flask, render_template
 from database.models import get_leaderboard_for_quest
-from database.models import SessionLocal, User
+from database.models import Session, User
 
 app = Flask(__name__)
 
 @app.route("/test_db")
 def test_db_connection():
-    session = SessionLocal()
+    session = Session()
     try:
         # Перевіряємо, чи є користувачі в базі даних
         users = session.query(User).all()
