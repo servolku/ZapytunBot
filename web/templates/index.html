@@ -163,8 +163,8 @@
         <section class="leaderboard-section">
             <h2>Таблиця лідерів</h2>
             <ol>
-                {% for name, score in leaderboard %}
-                    <li>{{ name }}: {{ score }} балів</li>
+                {% for name, score, duration in leaderboard %}
+                    <li>{{ name }}: {{ score }} балів, час: {{ duration }}</li>
                 {% endfor %}
             </ol>
         </section>
