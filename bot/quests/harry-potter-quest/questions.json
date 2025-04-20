@@ -1,0 +1,17 @@
+{
+  "quest_id": "harry-potter-quest",
+  "quest_name": "Гаррі Поттер Квест",
+  "is_open": false,
+  "description": "Магічний квест для справжніх фанатів світу Гаррі Поттера.",
+  "questions": [
+    {
+      "question": "Як називається школа, у якій навчався Гаррі Поттер?",
+      "options": ["Дурмштранг", "Гогвортс", "Бобатон", "Ілверморні"],
+      "correct": 1,
+      "latitude": 51.5007,
+      "longitude": -0.1246,
+      "question_image": "hogwarts.jpg",
+      "after_answer_image": "diagon-alley.jpg"
+    }
+  ]
+}
