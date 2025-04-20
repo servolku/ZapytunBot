@@ -248,7 +248,7 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         del USER_SESSION[user_id]
     else:
-        await query.message.reply_text("Перейдіть до наступної локації та натисніть \"Отримати питання\".")
+        await query.message.reply_text("Перейдіть до наступної локації та натисніть \"Надіслати геолокацію\".")
 
 async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
