@@ -1,10 +1,14 @@
 import sys
 import os
 import json
+import glob
 import logging
 import math
 from datetime import datetime
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
+from telegram import (
+    Update, InlineKeyboardButton, InlineKeyboardMarkup,
+    ReplyKeyboardMarkup, KeyboardButton
+)
 from telegram.ext import ContextTypes
 from database.models import (
     get_or_create_user,
@@ -20,17 +24,30 @@ logger = logging.getLogger(__name__)
 
 USER_SESSION = {}
 
-def load_questions():
-    file_path = "bot/questions.json"
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"Файл {file_path} не знайдено!")
-    with open(file_path, "r") as f:
+QUESTS_DIR = os.path.join("bot", "quests")
+
+def get_open_quests():
+    open_quests = []
+    for quest_path in glob.glob(os.path.join(QUESTS_DIR, "*/questions.json")):
+        with open(quest_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if data.get("is_open"):
+                open_quests.append({
+                    "quest_id": data["quest_id"],
+                    "quest_name": data.get("quest_name", data["quest_id"]),
+                    "description": data.get("description", ""),
+                    "path": quest_path
+                })
+    return open_quests
+
+def load_questions_for_user(user_id):
+    user = USER_SESSION.get(user_id, {})
+    questions_path = user.get("questions_path")
+    if not questions_path or not os.path.exists(questions_path):
+        raise FileNotFoundError(f"Файл {questions_path} не знайдено!")
+    with open(questions_path, "r", encoding="utf-8") as f:
         data = json.load(f)
         return data
-
-def get_current_quest_id():
-    data = load_questions()
-    return data.get("quest_id", "default-quest")
 
 def haversine(lat1, lon1, lat2, lon2):
     R = 6371000
@@ -46,34 +63,69 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(f"Received /start command from user: {update.effective_user.id}")
     user = update.effective_user
     get_or_create_user(user.id, user.first_name)
-    USER_SESSION[user.id] = {"current_question": 0, "score": 0}
+    USER_SESSION[user.id] = {}
 
-    questions_data = load_questions()
-    quest_id = questions_data.get("quest_id", "default-quest")
-    quest_name = questions_data.get("quest_name", "Квест")
+    open_quests = get_open_quests()
+    if not open_quests:
+        await update.message.reply_text("Немає відкритих квестів для проходження наразі.")
+        return
 
-    # Зберігаємо старт квесту
-    start_quest_for_user(user.id, quest_id, user.first_name)
+    # Зберігаємо список квестів у context.user_data
+    context.user_data["open_quests"] = open_quests
 
+    # Формуємо кнопки зі списком квестів
+    keyboard = [
+        [quest["quest_name"]] for quest in open_quests
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True)
+    quest_list_text = "Оберіть квест для проходження:\n\n"
+    for quest in open_quests:
+        quest_list_text += f"• <b>{quest['quest_name']}</b>\n{quest['description']}\n\n"
+    await update.message.reply_text(
+        quest_list_text,
+        reply_markup=reply_markup,
+        parse_mode="HTML"
+    )
+    USER_SESSION[user.id]["state"] = "CHOOSE_QUEST"
+
+async def handle_choose_quest(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if user_id not in USER_SESSION or USER_SESSION[user_id].get("state") != "CHOOSE_QUEST":
+        return
+
+    quest_name = update.message.text
+    open_quests = context.user_data.get("open_quests", [])
+    chosen_quest = next((q for q in open_quests if q["quest_name"] == quest_name), None)
+    if not chosen_quest:
+        await update.message.reply_text("Квест не знайдено. Спробуйте ще раз.")
+        return
+
+    USER_SESSION[user_id]["quest_id"] = chosen_quest["quest_id"]
+    USER_SESSION[user_id]["questions_path"] = chosen_quest["path"]
+    USER_SESSION[user_id]["current_question"] = 0
+    USER_SESSION[user_id]["score"] = 0
+    USER_SESSION[user_id]["state"] = "IN_QUEST"
+
+    # Запускаємо квест для користувача
+    start_quest_for_user(user_id, chosen_quest["quest_id"], update.effective_user.first_name)
     main_keyboard = ReplyKeyboardMarkup(
         [["Отримати питання"]],
         resize_keyboard=True,
         one_time_keyboard=False
     )
-
     await update.message.reply_text(
-        f"Привіт, {user.first_name}! Готовий розпочати «{quest_name}»?\n"
-        "Натисни 'Отримати питання', щоб почати.",
+        f"Ви обрали квест: «{quest_name}»\nНатисніть 'Отримати питання', щоб почати.",
         reply_markup=main_keyboard
     )
 
 async def handle_get_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    if user_id not in USER_SESSION:
-        USER_SESSION[user_id] = {"current_question": 0, "score": 0}
+    if user_id not in USER_SESSION or USER_SESSION[user_id].get("state") != "IN_QUEST":
+        await update.message.reply_text("Спочатку оберіть квест через /start.")
+        return
 
-    questions_data = load_questions()
-    questions = questions_data["questions"]
+    data = load_questions_for_user(user_id)
+    questions = data["questions"]
     question_index = USER_SESSION[user_id]["current_question"]
 
     if question_index >= len(questions):
@@ -99,11 +151,12 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Ви не надали геолокацію. Спробуйте ще раз.")
         return
 
-    if user_id not in USER_SESSION:
-        USER_SESSION[user_id] = {"current_question": 0, "score": 0}
+    if user_id not in USER_SESSION or USER_SESSION[user_id].get("state") != "IN_QUEST":
+        await update.message.reply_text("Спочатку оберіть квест через /start.")
+        return
 
-    questions_data = load_questions()
-    questions = questions_data["questions"]
+    data = load_questions_for_user(user_id)
+    questions = data["questions"]
     question_index = USER_SESSION[user_id]["current_question"]
 
     if question_index >= len(questions):
@@ -126,6 +179,17 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
             for idx, option in enumerate(options)
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
+
+        # Надсилаємо зображення питання, якщо є
+        quest_dir = os.path.dirname(USER_SESSION[user_id]["questions_path"])
+        question_image = target_question.get("question_image")
+        if question_image:
+            image_path = os.path.join(quest_dir, question_image)
+            if os.path.exists(image_path):
+                with open(image_path, "rb") as photo:
+                    await update.message.reply_photo(photo=photo, caption=target_question["question"], reply_markup=reply_markup)
+                return  # питання вже відправлено з картинкою
+
         await update.message.reply_text(target_question["question"], reply_markup=reply_markup)
     else:
         await update.message.reply_text(
@@ -137,13 +201,13 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
 
     user_id = query.from_user.id
-    if user_id not in USER_SESSION:
-        await query.edit_message_text(text="❌ Помилка: Сесія не знайдена.")
+    if user_id not in USER_SESSION or USER_SESSION[user_id].get("state") != "IN_QUEST":
+        await query.edit_message_text(text="❌ Помилка: Сесія не знайдена або ви не обрали квест.")
         return
 
-    questions_data = load_questions()
-    questions = questions_data["questions"]
-    quest_id = questions_data.get("quest_id", "default-quest")
+    data = load_questions_for_user(user_id)
+    questions = data["questions"]
+    quest_id = data.get("quest_id", "default-quest")
     question_index = USER_SESSION[user_id]["current_question"]
     question = questions[question_index]
 
@@ -155,6 +219,15 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await query.edit_message_text(text=response)
 
+    # Показуємо зображення місцевості для наступної точки (якщо є)
+    after_answer_image = question.get("after_answer_image")
+    quest_dir = os.path.dirname(USER_SESSION[user_id]["questions_path"])
+    if after_answer_image:
+        image_path = os.path.join(quest_dir, after_answer_image)
+        if os.path.exists(image_path):
+            with open(image_path, "rb") as photo:
+                await query.message.reply_photo(photo=photo, caption="Ось місце наступної точки!")
+
     USER_SESSION[user_id]["current_question"] += 1
 
     if USER_SESSION[user_id]["current_question"] >= len(questions):
@@ -164,18 +237,22 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
             quest_id,
             USER_SESSION[user_id]["score"]
         )
-        await update.callback_query.message.reply_text(
+        await query.message.reply_text(
             f"Квест завершено! Твій підсумковий результат: {USER_SESSION[user_id]['score']} балів.\n"
             "Щоб пройти ще раз — натисни /start."
         )
         del USER_SESSION[user_id]
     else:
-        await update.callback_query.message.reply_text("Перейдіть до наступної локації.")
+        await query.message.reply_text("Перейдіть до наступної локації та натисніть \"Отримати питання\".")
 
 async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    questions_data = load_questions()
-    quest_id = questions_data.get("quest_id", "default-quest")
-    quest_name = questions_data.get("quest_name", "Квест")
+    user_id = update.effective_user.id
+    if user_id not in USER_SESSION or "questions_path" not in USER_SESSION[user_id]:
+        await update.message.reply_text("Спочатку оберіть квест через /start.")
+        return
+    data = load_questions_for_user(user_id)
+    quest_id = data.get("quest_id", "default-quest")
+    quest_name = data.get("quest_name", "Квест")
     leaderboard_data = get_leaderboard_for_quest(quest_id)
     leaderboard_text = f"🏆 Дошка переможців для «{quest_name}» 🏆\n\n"
     if not leaderboard_data:
@@ -187,3 +264,7 @@ async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
             time_str = f"{mins} хв {secs} сек"
             leaderboard_text += f"{idx}. {name}: {score} балів, час: {time_str}\n"
     await update.message.reply_text(leaderboard_text)
+
+# --- ДОДАЙТЕ у bot/bot.py ---
+# app.add_handler(MessageHandler(filters.TEXT, handle_choose_quest))
+# Цей хендлер має бути доданий ПЕРЕД обробником "Отримати питання", щоб вибір квесту спрацьовував правильно!
