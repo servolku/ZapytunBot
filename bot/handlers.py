@@ -217,7 +217,12 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         response = "❌ Неправильно!"
 
-    await query.edit_message_text(text=response)
+    if hasattr(query.message, "photo") and query.message.photo:
+        await query.edit_message_caption(caption=response)
+    else:
+        await query.edit_message_text(text=response)
+
+    # await query.edit_message_text(text=response)
 
     # Показуємо зображення місцевості для наступної точки (якщо є)
     after_answer_image = question.get("after_answer_image")
