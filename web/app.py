@@ -38,6 +38,8 @@ def home():
         for name, score, duration in get_leaderboard_for_quest(quest_id)
     ]
     print("DEBUG leaderboard_data:", leaderboard_data)
+    with open("/tmp/flask_leaderboard.log", "a") as f:
+        f.write(f"DEBUG leaderboard_data: {leaderboard_data}\n")
     return render_template("index.html", bot_name="ZapytunBot", leaderboard=leaderboard_data)
 
 def format_duration(seconds):
