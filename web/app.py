@@ -32,10 +32,19 @@ def add_test_user():
 
 @app.route("/")
 def home():
-    quest_id = "quest1"  # або передай з параметрів, або вибери перший із questions.json
-    leaderboard_data = get_leaderboard_for_quest(quest_id)
-    print("Leaderboard data:", leaderboard_data)
+    quest_id = "quest1"
+    leaderboard_data = [
+        (name, score, format_duration(duration))
+        for name, score, duration in get_leaderboard_for_quest(quest_id)
+    ]
     return render_template("index.html", bot_name="ZapytunBot", leaderboard=leaderboard_data)
+
+def format_duration(seconds):
+    if seconds is None:
+        return "-"
+    minutes = int(seconds) // 60
+    seconds = int(seconds) % 60
+    return f"{minutes} хв {seconds} сек"
 
 if __name__ == "__main__":
     import os
