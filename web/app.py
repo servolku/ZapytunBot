@@ -5,7 +5,7 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 from config import DATABASE_URL
 from flask import Flask, render_template
-from database.models import get_leaderboard
+from database.models import get_leaderboard_for_quest
 from database.models import SessionLocal, User
 
 app = Flask(__name__)
@@ -32,8 +32,9 @@ def add_test_user():
 
 @app.route("/")
 def home():
-    leaderboard_data = get_leaderboard()
-    print("Leaderboard data:", leaderboard_data)  # Додайте цей рядок
+    quest_id = "quest1"  # або передай з параметрів, або вибери перший із questions.json
+    leaderboard_data = get_leaderboard_for_quest(quest_id)
+    print("Leaderboard data:", leaderboard_data)
     return render_template("index.html", bot_name="ZapytunBot", leaderboard=leaderboard_data)
 
 if __name__ == "__main__":
