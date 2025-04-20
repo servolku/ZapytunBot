@@ -12,7 +12,7 @@ from telegram import Bot
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 
 # Тепер імпортуйте обробники
-from handlers import start, show_leaderboard, handle_answer, handle_location, handle_get_question
+from handlers import start, show_leaderboard, handle_answer, handle_location, handle_get_question, handle_choose_quest
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
