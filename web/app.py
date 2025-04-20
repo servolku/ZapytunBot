@@ -32,7 +32,7 @@ def add_test_user():
 
 @app.route("/")
 def home():
-    quest_id = "quest1"
+    quest_id = "ukraine-quest-test"
     leaderboard_data = [
         (name, score, format_duration(duration))
         for name, score, duration in get_leaderboard_for_quest(quest_id)
