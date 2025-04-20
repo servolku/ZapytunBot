@@ -37,6 +37,7 @@ def home():
         (name, score, format_duration(duration))
         for name, score, duration in get_leaderboard_for_quest(quest_id)
     ]
+    print("DEBUG leaderboard_data:", leaderboard_data)
     return render_template("index.html", bot_name="ZapytunBot", leaderboard=leaderboard_data)
 
 def format_duration(seconds):
