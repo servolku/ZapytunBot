@@ -57,6 +57,13 @@ def debug_all_quests():
     session.close()
     return f"Quest IDs in DB: {quest_ids}"
 
+@app.route("/debug_leaderboard_raw")
+def debug_leaderboard_raw():
+    from database.models import get_leaderboard_for_quest
+    quest_id = "ukraine-quest-test"  # підстав сюди реальний quest_id з попереднього кроку
+    leaderboard = get_leaderboard_for_quest(quest_id)
+    return f"Leaderboard data for {quest_id}: {leaderboard}"
+
 
 if __name__ == "__main__":
     import os
