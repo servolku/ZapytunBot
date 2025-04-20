@@ -49,6 +49,15 @@ def format_duration(seconds):
     seconds = int(seconds) % 60
     return f"{minutes} хв {seconds} сек"
 
+@app.route("/debug_all_quests")
+def debug_all_quests():
+    from database.models import Session, QuestResult
+    session = Session()
+    quest_ids = session.query(QuestResult.quest_id).distinct().all()
+    session.close()
+    return f"Quest IDs in DB: {quest_ids}"
+
+
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 8000))
