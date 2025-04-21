@@ -150,32 +150,35 @@
         <img src="/static/logo.png" alt="ZapytunBot Logo">
         <h1>Ласкаво просимо до ZapytunBot!</h1>
     </header>
-    <main>
-        <section>
-            <p>
-                🌟 ZapytunBot - це ваш дружній бот, готовий допомогти з будь-якими завданнями. Отримуйте задоволення від взаємодії!
-            </p>
-            <div class="button-container">
-                <a href="http://t.me/Zapytun52_bot" target="_blank" class="button-link">Перейти до бота</a>
-                <div class="telegram-icon" style="background-image: url('/static/tl.png');"></div>
-            </div>
-        </section>
-        {% for quest in all_leaderboards %}
-            <section class="leaderboard-section">
-                <h2>Таблиця лідерів для "{{ quest.quest_name }}"</h2>
-                {% if quest.description %}
-                    <p>{{ quest.description }}</p>
-                {% endif %}
-                <ol>
-                    {% for name, score, duration in quest.leaderboard %}
-                        <li>{{ name }}: {{ score }} балів, час: {{ duration }}</li>
-                    {% endfor %}
-                    {% if not quest.leaderboard %}
-                        <li>Ще немає учасників.</li>
-                    {% endif %}
-                </ol>
-            </section>
-        {% endfor %}
-    </main>
+
+	<main>
+		<section>
+			<p>
+				🌟 ZapytunBot - це ваш дружній бот, готовий допомогти з будь-якими завданнями. Отримуйте задоволення від взаємодії!
+			</p>
+			<div class="button-container">
+				<a href="http://t.me/Zapytun52_bot" target="_blank" class="button-link">Перейти до бота</a>
+				<div class="telegram-icon" style="background-image: url('/static/tl.png');"></div>
+			</div>
+		</section>
+
+		{% for quest in all_leaderboards %}
+			<section class="leaderboard-section">
+				<h2>Таблиця лідерів для "{{ quest.quest_name }}"</h2>
+				{% if quest.description %}
+					<p>{{ quest.description }}</p>
+				{% endif %}
+				<ol>
+					{% for name, score, duration in quest.leaderboard %}
+						<li>{{ name }}: {{ score }} балів, час: {{ duration }}</li>
+					{% endfor %}
+					{% if not quest.leaderboard %}
+						<li>Ще немає учасників.</li>
+					{% endif %}
+				</ol>
+			</section>
+		{% endfor %}
+	</main>
+
 </body>
 </html>
