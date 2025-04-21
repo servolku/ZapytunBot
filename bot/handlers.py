@@ -4,6 +4,7 @@ import json
 import glob
 import logging
 import math
+import random
 from datetime import datetime
 from telegram import (
     Update, InlineKeyboardButton, InlineKeyboardMarkup,
@@ -90,24 +91,35 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_choose_quest(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    if user_id not in USER_SESSION or USER_SESSION[user_id].get("state") != "CHOOSE_QUEST":
-        return
-
+	
     quest_name = update.message.text
-    open_quests = context.user_data.get("open_quests", [])
-    chosen_quest = next((q for q in open_quests if q["quest_name"] == quest_name), None)
-    if not chosen_quest:
-        await update.message.reply_text("Квест не знайдено. Спробуйте ще раз.")
+    # Знайти квест за ім’ям у context.user_data["open_quests"]
+    quest = next((q for q in context.user_data["open_quests"] if q["quest_name"] == quest_name), None)
+    if not quest:
+        await update.message.reply_text("Квест не знайдено.")
         return
 
-    USER_SESSION[user_id]["quest_id"] = chosen_quest["quest_id"]
-    USER_SESSION[user_id]["questions_path"] = chosen_quest["path"]
+    # Завантажити питання цього квесту (шлях до questions.json)
+    with open(quest["file_path"], "r", encoding="utf-8") as f:
+        data = json.load(f)
+    questions = data["questions"]
+    random_order = data.get("random_order", False)
+
+    if random_order:
+        indices = list(range(len(questions)))
+        random.shuffle(indices)
+    else:
+        indices = list(range(len(questions)))
+
     USER_SESSION[user_id]["current_question"] = 0
     USER_SESSION[user_id]["score"] = 0
+    USER_SESSION[user_id]["order"] = indices
+    USER_SESSION[user_id]["questions"] = questions
+    USER_SESSION[user_id]["quest_id"] = data["quest_id"]
     USER_SESSION[user_id]["state"] = "IN_QUEST"
 
-    # Запускаємо квест для користувача
-    start_quest_for_user(user_id, chosen_quest["quest_id"], update.effective_user.first_name)
+    # Старт для бд
+    start_quest_for_user(user_id, data["quest_id"], update.effective_user.first_name)
     main_keyboard = ReplyKeyboardMarkup(
         [["Отримати питання"]],
         resize_keyboard=True,
@@ -127,10 +139,14 @@ async def handle_get_question(update: Update, context: ContextTypes.DEFAULT_TYPE
     data = load_questions_for_user(user_id)
     questions = data["questions"]
     question_index = USER_SESSION[user_id]["current_question"]
+    order = USER_SESSION[user_id].get("order", list(range(len(questions))))  # <--- дістаємо порядок
 
     if question_index >= len(questions):
         await update.message.reply_text("Всі питання завершені. Щоб почати знову, натисніть /start.")
         return
+
+    real_question_idx = order[question_index]  # <--- тут!
+    question = questions[real_question_idx]
 
     location_keyboard = ReplyKeyboardMarkup(
         [[KeyboardButton("Надіслати геолокацію", request_location=True)]],
@@ -158,12 +174,10 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = load_questions_for_user(user_id)
     questions = data["questions"]
     question_index = USER_SESSION[user_id]["current_question"]
+    order = USER_SESSION[user_id].get("order", list(range(len(questions))))
+    real_question_idx = order[question_index]
+    target_question = questions[real_question_idx]
 
-    if question_index >= len(questions):
-        await update.message.reply_text("Всі питання завершені. Щоб почати знову, натисніть /start.")
-        return
-
-    target_question = questions[question_index]
     target_lat = target_question.get("latitude")
     target_lon = target_question.get("longitude")
 
@@ -209,7 +223,9 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     questions = data["questions"]
     quest_id = data.get("quest_id", "default-quest")
     question_index = USER_SESSION[user_id]["current_question"]
-    question = questions[question_index]
+    order = USER_SESSION[user_id].get("order", list(range(len(questions))))
+    real_question_idx = order[question_index]
+    question = questions[real_question_idx]
 
     if int(query.data) == question["correct"]:
         USER_SESSION[user_id]["score"] += 1
@@ -221,8 +237,6 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_caption(caption=response)
     else:
         await query.edit_message_text(text=response)
-
-    # await query.edit_message_text(text=response)
 
     # Показуємо зображення місцевості для наступної точки (якщо є)
     after_answer_image = question.get("after_answer_image")
