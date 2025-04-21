@@ -160,14 +160,22 @@
                 <div class="telegram-icon" style="background-image: url('/static/tl.png');"></div>
             </div>
         </section>
-        <section class="leaderboard-section">
-            <h2>Таблиця лідерів</h2>
-            <ol>
-                {% for name, score, duration in leaderboard %}
-                    <li>{{ name }}: {{ score }} балів, час: {{ duration }}</li>
-                {% endfor %}
-            </ol>
-        </section>
+        % for quest in all_leaderboards %}
+            {<section class="leaderboard-section">
+                <h2>Таблиця лідерів для "{{ quest.quest_name }}"</h2>
+                {% if quest.description %}
+                    <p>{{ quest.description }}</p>
+                {% endif %}
+                <ol>
+                    {% for name, score, duration in quest.leaderboard %}
+                        <li>{{ name }}: {{ score }} балів, час: {{ duration }}</li>
+                    {% endfor %}
+                    {% if not quest.leaderboard %}
+                        <li>Ще немає учасників.</li>
+                    {% endif %}
+                </ol>
+            </section>
+        {% endfor %}
     </main>
 </body>
 </html>
