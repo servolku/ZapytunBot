@@ -33,6 +33,7 @@ app = Flask(__name__)
 
 def home():
     quests = get_open_quests()
+    print("quests:", quests)
     all_leaderboards = []
     for quest in quests:
         quest_id = quest["quest_id"]
