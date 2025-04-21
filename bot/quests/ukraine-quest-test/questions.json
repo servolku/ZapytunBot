@@ -1,8 +1,9 @@
 {
   "quest_id": "ukraine-quest-test",
   "quest_name": "Квест про Україну",
-  "is_open": true,
   "description": "Відкрий для себе Україну, відповідаючи на питання в різних локаціях!",
+  "is_open": true,
+  "random_order": true,
   "questions": [
     {
       "question": "Яка столиця України?",
