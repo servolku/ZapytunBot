@@ -100,7 +100,7 @@ async def handle_choose_quest(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
 
     # Завантажити питання цього квесту (шлях до questions.json)
-    with open(quest["file_path"], "r", encoding="utf-8") as f:
+    with open(quest["path"], "r", encoding="utf-8") as f:
         data = json.load(f)
     questions = data["questions"]
     random_order = data.get("random_order", False)
