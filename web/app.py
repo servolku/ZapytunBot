@@ -45,6 +45,7 @@ def home():
             "description": quest["description"],
             "leaderboard": leaderboard
         })
+    print("all_leaderboards:", all_leaderboards)
     return render_template(
         "index.html",
         bot_name="ZapytunBot",
