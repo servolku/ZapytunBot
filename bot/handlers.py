@@ -117,6 +117,7 @@ async def handle_choose_quest(update: Update, context: ContextTypes.DEFAULT_TYPE
     USER_SESSION[user_id]["questions"] = questions
     USER_SESSION[user_id]["quest_id"] = data["quest_id"]
     USER_SESSION[user_id]["state"] = "IN_QUEST"
+    USER_SESSION[user_id]["questions_path"] = quest["path"]
 
     # Старт для бд
     start_quest_for_user(user_id, data["quest_id"], update.effective_user.first_name)
