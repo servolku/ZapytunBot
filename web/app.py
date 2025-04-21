@@ -8,11 +8,9 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from config import DATABASE_URL
 from flask import Flask, render_template
 from database.models import get_leaderboard_for_quest
-from database.models import Session, User
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-QUESTS_DIR = os.path.join("bot", "quests")
+QUESTS_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "bot", "quests"))
 
 def get_open_quests():
     open_quests = []
@@ -27,13 +25,18 @@ def get_open_quests():
                 })
     return open_quests
 
+def format_duration(seconds):
+    if seconds is None:
+        return "-"
+    minutes = int(seconds) // 60
+    seconds = int(seconds) % 60
+    return f"{minutes} хв {seconds} сек"
+
 app = Flask(__name__)
 
 @app.route("/")
-
 def home():
     quests = get_open_quests()
-    print("quests:", quests)
     all_leaderboards = []
     for quest in quests:
         quest_id = quest["quest_id"]
@@ -46,19 +49,11 @@ def home():
             "description": quest["description"],
             "leaderboard": leaderboard
         })
-    print("all_leaderboards:", all_leaderboards)
     return render_template(
         "index.html",
         bot_name="ZapytunBot",
         all_leaderboards=all_leaderboards
     )
-
-def format_duration(seconds):
-    if seconds is None:
-        return "-"
-    minutes = int(seconds) // 60
-    seconds = int(seconds) % 60
-    return f"{minutes} хв {seconds} сек"
 
 if __name__ == "__main__":
     import os
