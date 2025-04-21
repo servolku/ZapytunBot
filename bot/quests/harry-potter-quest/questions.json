@@ -1,8 +1,9 @@
 {
   "quest_id": "harry-potter-quest",
   "quest_name": "Гаррі Поттер Квест",
-  "is_open": false,
   "description": "Магічний квест для справжніх фанатів світу Гаррі Поттера.",
+  "is_open": false,
+  "random_order": true,
   "questions": [
     {
       "question": "Як називається школа, у якій навчався Гаррі Поттер?",
