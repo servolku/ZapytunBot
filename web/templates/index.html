@@ -160,7 +160,7 @@
                 <div class="telegram-icon" style="background-image: url('/static/tl.png');"></div>
             </div>
         </section>
-        % for quest in all_leaderboards %}
+        {% for quest in all_leaderboards %}
             {<section class="leaderboard-section">
                 <h2>Таблиця лідерів для "{{ quest.quest_name }}"</h2>
                 {% if quest.description %}
