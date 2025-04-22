@@ -12,7 +12,7 @@
       "latitude": 50.749250,
       "longitude": 25.373737,
       "question_image": "kyiv.jpg",
-      "after_answer_image": "next_location1.jpg"
+      "location_image": "next_location1.jpg"
     },
     {
       "question": "Яка найдовша річка України?",
@@ -21,7 +21,7 @@
       "latitude": 50.748592,
       "longitude": 25.374419,
       "question_image": null,
-      "after_answer_image": "dnipro-location.jpg"
+      "location_image": "dnipro-location.jpg"
     }
   ]
 }
