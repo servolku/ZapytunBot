@@ -140,14 +140,31 @@ async def handle_get_question(update: Update, context: ContextTypes.DEFAULT_TYPE
     data = load_questions_for_user(user_id)
     questions = data["questions"]
     question_index = USER_SESSION[user_id]["current_question"]
-    order = USER_SESSION[user_id].get("order", list(range(len(questions))))  # <--- дістаємо порядок
+    order = USER_SESSION[user_id].get("order", list(range(len(questions))))
 
     if question_index >= len(questions):
         await update.message.reply_text("Всі питання завершені. Щоб почати знову, натисніть /start.")
         return
 
-    real_question_idx = order[question_index]  # <--- тут!
+    real_question_idx = order[question_index]
     question = questions[real_question_idx]
+
+    quest_dir = os.path.dirname(USER_SESSION[user_id]["questions_path"])
+    location_image = question.get("location_image")
+    # --- Додаємо вітальний текст ---
+    total = len(questions)
+    text = f"Питання {question_index + 1} з {total}\nОсь місце, куди треба дістатися!"
+
+    if location_image:
+        image_path = os.path.join(quest_dir, location_image)
+        if os.path.exists(image_path):
+            with open(image_path, "rb") as photo:
+                await update.message.reply_photo(photo=photo, caption=text)
+        else:
+            logger.warning(f"Файл зображення {image_path} не знайдено.")
+            await update.message.reply_text(text)
+    else:
+        await update.message.reply_text(text)
 
     location_keyboard = ReplyKeyboardMarkup(
         [[KeyboardButton("Надіслати геолокацію", request_location=True)]],
@@ -239,18 +256,29 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await query.edit_message_text(text=response)
 
-    # Показуємо зображення місцевості для наступної точки (якщо є)
-    after_answer_image = question.get("after_answer_image")
-    quest_dir = os.path.dirname(USER_SESSION[user_id]["questions_path"])
-    if after_answer_image:
-        image_path = os.path.join(quest_dir, after_answer_image)
-        if os.path.exists(image_path):
-            with open(image_path, "rb") as photo:
-                await query.message.reply_photo(photo=photo, caption="Ось місце наступної точки!")
-
     USER_SESSION[user_id]["current_question"] += 1
 
-    if USER_SESSION[user_id]["current_question"] >= len(questions):
+    # Надіслати location_image наступного питання, якщо воно є
+    next_question_index = USER_SESSION[user_id]["current_question"]
+    total = len(questions)
+    if next_question_index < total:
+        next_real_question_idx = order[next_question_index]
+        next_question = questions[next_real_question_idx]
+        quest_dir = os.path.dirname(USER_SESSION[user_id]["questions_path"])
+        next_location_image = next_question.get("location_image")
+        text = f"Питання {next_question_index + 1} з {total}\nОсь місце наступної точки!"
+
+        if next_location_image:
+            image_path = os.path.join(quest_dir, next_location_image)
+            if os.path.exists(image_path):
+                with open(image_path, "rb") as photo:
+                    await query.message.reply_photo(photo=photo, caption=text)
+            else:
+                logger.warning(f"Файл зображення {image_path} не знайдено.")
+                await query.message.reply_text(text)
+
+        await query.message.reply_text("Перейдіть до наступної локації та натисніть \"Надіслати геолокацію\".")
+    else:
         # Фінішуємо квест для користувача
         finish_quest_for_user(
             user_id,
@@ -262,8 +290,6 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Щоб пройти ще раз — натисни /start."
         )
         del USER_SESSION[user_id]
-    else:
-        await query.message.reply_text("Перейдіть до наступної локації та натисніть \"Надіслати геолокацію\".")
 
 async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
