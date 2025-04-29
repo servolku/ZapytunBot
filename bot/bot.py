@@ -10,6 +10,7 @@ create_tables()
 
 from telegram import Bot
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters
+from quest_admin import create_quest_start, create_quest_message_handler
 
 # Тепер імпортуйте обробники
 from handlers import start, show_leaderboard, handle_answer, handle_location, handle_get_question, handle_choose_quest
@@ -39,6 +40,8 @@ app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 # Додаємо обробники команд
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("leaderboard", show_leaderboard))
+app.add_handler(CommandHandler("create_quest", create_quest_start))
+app.add_handler(MessageHandler(filters.TEXT, create_quest_message_handler))
 
 # Додаємо обробник для кнопки "ОТРИМАТИ ПИТАННЯ"
 app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^Отримати питання$"), handle_get_question))
