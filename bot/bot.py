@@ -37,16 +37,19 @@ logger = logging.getLogger(__name__)
 # Створення додатка
 app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
+# Додаємо обробник для вибору квесту
+app.add_handler(MessageHandler(filters.TEXT, handle_choose_quest))  # Має бути перед іншими обробниками TEXT
+
 # Додаємо обробники команд
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("leaderboard", show_leaderboard))
 app.add_handler(CommandHandler("create_quest", create_quest_start))
+
+# Додаємо обробники для створення квестів
 app.add_handler(MessageHandler(filters.TEXT, create_quest_message_handler))
 
 # Додаємо обробник для кнопки "ОТРИМАТИ ПИТАННЯ"
 app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^Отримати питання$"), handle_get_question))
-
-app.add_handler(MessageHandler(filters.TEXT, handle_choose_quest))
 
 # Додаємо обробник для геолокації
 app.add_handler(MessageHandler(filters.LOCATION, handle_location))
