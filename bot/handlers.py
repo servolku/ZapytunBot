@@ -67,12 +67,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     USER_SESSION[user.id] = {}
 
     open_quests = get_open_quests()
+    logger.info(f"Open quests: {open_quests}")
     if not open_quests:
         await update.message.reply_text("Немає відкритих квестів для проходження наразі.")
         return
 
     # Зберігаємо список квестів у context.user_data
     context.user_data["open_quests"] = open_quests
+    logger.info(f"Saved open quests in context.user_data for user {update.effective_user.id}")
 
     # Формуємо кнопки зі списком квестів
     keyboard = [
@@ -91,10 +93,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_choose_quest(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-	
+    logger.info(f"User {user_id} selected quest: {update.message.text}")
+
+    # Перевірка, чи є open_quests у context.user_data
+    quests = context.user_data.get("open_quests", [])
+    if not quests:
+        await update.message.reply_text("❌ Ви ще не обрали /start для завантаження квестів.")
+        return
+    logger.info(f"Available quests for user {user_id}: {quests}")
+
     quest_name = update.message.text
-    # Знайти квест за ім’ям у context.user_data["open_quests"]
-    quest = next((q for q in context.user_data["open_quests"] if q["quest_name"] == quest_name), None)
+    quest = next((q for q in quests if q["quest_name"] == quest_name), None)
     if not quest:
         await update.message.reply_text("Квест не знайдено.")
         return
