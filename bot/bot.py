@@ -15,6 +15,21 @@ from quest_admin import create_quest_start, create_quest_message_handler
 # Тепер імпортуйте обробники
 from handlers import start, show_leaderboard, handle_answer, handle_location, handle_get_question, handle_choose_quest
 
+from telegram.ext import MessageFilter
+
+class CreateQuestStateFilter(MessageFilter):
+    def filter(self, message):
+        return message and message.from_user and message.from_user.id in context.user_data and context.user_data.get("quest_create_state") is not None
+
+class ChooseQuestStateFilter(MessageFilter):
+    def filter(self, message):
+        from handlers import USER_SESSION
+        user_id = message.from_user.id
+        return USER_SESSION.get(user_id, {}).get("state") == "CHOOSE_QUEST"
+
+create_quest_state_filter = CreateQuestStateFilter()
+choose_quest_state_filter = ChooseQuestStateFilter()
+
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 # Ініціалізація бота
@@ -43,21 +58,13 @@ app.add_handler(CommandHandler("leaderboard", show_leaderboard))
 app.add_handler(CommandHandler("create_quest", create_quest_start))
 
 # Додаємо обробник для створення квесту (тільки якщо користувач у процесі створення)
-async def filtered_create_quest_handler(update, context):
-    if context.user_data.get("quest_create_state") is not None:
-        await create_quest_message_handler(update, context)
-app.add_handler(MessageHandler(filters.TEXT, filtered_create_quest_handler))
+app.add_handler(MessageHandler(create_quest_state_filter, create_quest_message_handler))
 
 # Додаємо обробник для кнопки "ОТРИМАТИ ПИТАННЯ"
 app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^Отримати питання$"), handle_get_question))
 
 # Додаємо обробник для вибору квесту (тільки якщо користувач у стані вибору)
-from handlers import USER_SESSION
-async def filtered_choose_quest_handler(update, context):
-    user_id = update.effective_user.id
-    if USER_SESSION.get(user_id, {}).get("state") == "CHOOSE_QUEST":
-        await handle_choose_quest(update, context)
-app.add_handler(MessageHandler(filters.TEXT, filtered_choose_quest_handler))
+app.add_handler(MessageHandler(choose_quest_state_filter, handle_choose_quest))
 
 # Додаємо обробник для геолокації
 app.add_handler(MessageHandler(filters.LOCATION, handle_location))
