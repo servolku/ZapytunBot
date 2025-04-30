@@ -23,7 +23,7 @@ bot = Bot(token=TELEGRAM_BOT_TOKEN)
 # Асинхронне видалення вебхука
 async def remove_webhook():
     webhook_deleted = await bot.delete_webhook(drop_pending_updates=True)
-    if webhook_deleted:
+    if (webhook_deleted):
         logging.info("Webhook successfully deleted.")
     else:
         logging.warning("Webhook was not active or could not be deleted.")
@@ -40,12 +40,24 @@ app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 # Додаємо обробник для вибору квесту
 from telegram.ext import MessageHandler, filters
 
+# Додаємо обробник для створення квесту (тільки якщо користувач у процесі створення)
+async def filtered_create_quest_handler(update, context):
+    if context.user_data.get("quest_create_state") is not None:
+        await create_quest_message_handler(update, context)
+
+app.add_handler(MessageHandler(filters.TEXT, filtered_create_quest_handler))
 
 # Додаємо обробник для кнопки "ОТРИМАТИ ПИТАННЯ"
 app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^Отримати питання$"), handle_get_question))
 
+# Додаємо обробник для вибору квесту (тільки якщо користувач у стані вибору)
+from handlers import USER_SESSION
+async def filtered_choose_quest_handler(update, context):
+    user_id = update.effective_user.id
+    if USER_SESSION.get(user_id, {}).get("state") == "CHOOSE_QUEST":
+        await handle_choose_quest(update, context)
 
-app.add_handler(MessageHandler(filters.TEXT, handle_choose_quest))
+app.add_handler(MessageHandler(filters.TEXT, filtered_choose_quest_handler))
 
 # Додаємо обробники команд
 app.add_handler(CommandHandler("start", start))
@@ -54,8 +66,6 @@ app.add_handler(CommandHandler("create_quest", create_quest_start))
 
 # Додаємо обробники для створення квестів
 app.add_handler(MessageHandler(filters.TEXT, create_quest_message_handler))
-
-
 
 # Додаємо обробник для геолокації
 app.add_handler(MessageHandler(filters.LOCATION, handle_location))
