@@ -37,14 +37,15 @@ logger = logging.getLogger(__name__)
 # Створення додатка
 app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
-# Додаємо обробник для вибору квесту
-from telegram.ext import MessageHandler, filters
+# Додаємо обробники команд НАЙПЕРШИМИ!
+app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("leaderboard", show_leaderboard))
+app.add_handler(CommandHandler("create_quest", create_quest_start))
 
 # Додаємо обробник для створення квесту (тільки якщо користувач у процесі створення)
 async def filtered_create_quest_handler(update, context):
     if context.user_data.get("quest_create_state") is not None:
         await create_quest_message_handler(update, context)
-
 app.add_handler(MessageHandler(filters.TEXT, filtered_create_quest_handler))
 
 # Додаємо обробник для кнопки "ОТРИМАТИ ПИТАННЯ"
@@ -56,13 +57,7 @@ async def filtered_choose_quest_handler(update, context):
     user_id = update.effective_user.id
     if USER_SESSION.get(user_id, {}).get("state") == "CHOOSE_QUEST":
         await handle_choose_quest(update, context)
-
 app.add_handler(MessageHandler(filters.TEXT, filtered_choose_quest_handler))
-
-# Додаємо обробники команд
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("leaderboard", show_leaderboard))
-app.add_handler(CommandHandler("create_quest", create_quest_start))
 
 # Додаємо обробник для геолокації
 app.add_handler(MessageHandler(filters.LOCATION, handle_location))
