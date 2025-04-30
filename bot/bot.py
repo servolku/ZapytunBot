@@ -64,9 +64,6 @@ app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("leaderboard", show_leaderboard))
 app.add_handler(CommandHandler("create_quest", create_quest_start))
 
-# Додаємо обробники для створення квестів
-app.add_handler(MessageHandler(filters.TEXT, create_quest_message_handler))
-
 # Додаємо обробник для геолокації
 app.add_handler(MessageHandler(filters.LOCATION, handle_location))
 
