@@ -10,6 +10,7 @@ from telegram import (
     Update, InlineKeyboardButton, InlineKeyboardMarkup,
     ReplyKeyboardMarkup, KeyboardButton
 )
+#непотрібний коментар
 from telegram.ext import ContextTypes
 from database.models import (
     get_or_create_user,
@@ -322,25 +323,4 @@ async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
             time_str = f"{mins} хв {secs} сек"
             leaderboard_text += f"{idx}. {name}: {score} балів, час: {time_str}\n"
     await update.message.reply_text(leaderboard_text)
-
-# Додаємо обробник для створення квесту (тільки якщо користувач у процесі створення)
-async def filtered_create_quest_handler(update, context):
-    # Якщо користувач у процесі створення квесту — обробляємо тут
-    if context.user_data.get("quest_create_state") is not None:
-        await create_quest_message_handler(update, context)
-
-app.add_handler(MessageHandler(filters.TEXT, filtered_create_quest_handler))
-
-# Додаємо обробник для кнопки "ОТРИМАТИ ПИТАННЯ"
-app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^Отримати питання$"), handle_get_question))
-
-# Додаємо обробник для вибору квесту (тільки якщо користувач у стані вибору)
-async def filtered_choose_quest_handler(update, context):
-    user_id = update.effective_user.id
-    # Якщо користувач у стані вибору квесту — обробляємо тут
-    from handlers import USER_SESSION
-    if USER_SESSION.get(user_id, {}).get("state") == "CHOOSE_QUEST":
-        await handle_choose_quest(update, context)
-
-app.add_handler(MessageHandler(filters.TEXT, filtered_choose_quest_handler))
 
