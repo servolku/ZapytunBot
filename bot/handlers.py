@@ -93,6 +93,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_choose_quest(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
+    # Додаємо перевірку стану
+    if USER_SESSION.get(user_id, {}).get("state") != "CHOOSE_QUEST":
+        return  # ігноруємо, якщо не вибір квесту
     logger.info(f"User {user_id} selected quest: {update.message.text}")
 
     # Перевірка, чи є open_quests у context.user_data
