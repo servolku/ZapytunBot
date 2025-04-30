@@ -15,21 +15,6 @@ from quest_admin import create_quest_start, create_quest_message_handler
 # Тепер імпортуйте обробники
 from handlers import start, show_leaderboard, handle_answer, handle_location, handle_get_question, handle_choose_quest
 
-from telegram.ext import MessageFilter
-
-class CreateQuestStateFilter(MessageFilter):
-    def filter(self, message):
-        return message and message.from_user and message.from_user.id in context.user_data and context.user_data.get("quest_create_state") is not None
-
-class ChooseQuestStateFilter(MessageFilter):
-    def filter(self, message):
-        from handlers import USER_SESSION
-        user_id = message.from_user.id
-        return USER_SESSION.get(user_id, {}).get("state") == "CHOOSE_QUEST"
-
-create_quest_state_filter = CreateQuestStateFilter()
-choose_quest_state_filter = ChooseQuestStateFilter()
-
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 # Ініціалізація бота
