@@ -282,7 +282,7 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if next_location_image:
             image_path = os.path.join(quest_dir, next_location_image)
-            if os.path.exists(image_path):
+            if ос.path.exists(image_path):
                 with open(image_path, "rb") as photo:
                     await query.message.reply_photo(photo=photo, caption=text)
             else:
@@ -323,6 +323,24 @@ async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
             leaderboard_text += f"{idx}. {name}: {score} балів, час: {time_str}\n"
     await update.message.reply_text(leaderboard_text)
 
-# --- ДОДАЙТЕ у bot/bot.py ---
-# app.add_handler(MessageHandler(filters.TEXT, handle_choose_quest))
-# Цей хендлер має бути доданий ПЕРЕД обробником "Отримати питання", щоб вибір квесту спрацьовував правильно!
+# Додаємо обробник для створення квесту (тільки якщо користувач у процесі створення)
+async def filtered_create_quest_handler(update, context):
+    # Якщо користувач у процесі створення квесту — обробляємо тут
+    if context.user_data.get("quest_create_state") is not None:
+        await create_quest_message_handler(update, context)
+
+app.add_handler(MessageHandler(filters.TEXT, filtered_create_quest_handler))
+
+# Додаємо обробник для кнопки "ОТРИМАТИ ПИТАННЯ"
+app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^Отримати питання$"), handle_get_question))
+
+# Додаємо обробник для вибору квесту (тільки якщо користувач у стані вибору)
+async def filtered_choose_quest_handler(update, context):
+    user_id = update.effective_user.id
+    # Якщо користувач у стані вибору квесту — обробляємо тут
+    from handlers import USER_SESSION
+    if USER_SESSION.get(user_id, {}).get("state") == "CHOOSE_QUEST":
+        await handle_choose_quest(update, context)
+
+app.add_handler(MessageHandler(filters.TEXT, filtered_choose_quest_handler))
+
