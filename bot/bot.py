@@ -47,13 +47,14 @@ def choose_quest_filter(message):
     open_quests = user_data.get("open_quests", []) if user_data else []
     return bool(open_quests) and any(q["quest_name"] == message.text for q in open_quests)
 
-choose_quest_filter = filters.TEXT & filters.Create(choose_quest_filter)
+
 
 # Додаємо обробник для кнопки "ОТРИМАТИ ПИТАННЯ"
 app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^Отримати питання$"), handle_get_question))
 
 app.add_handler(MessageHandler(choose_quest_filter, handle_choose_quest))
 
+app.add_handler(MessageHandler(filters.TEXT, handle_choose_quest))
 
 # Додаємо обробники команд
 app.add_handler(CommandHandler("start", start))
