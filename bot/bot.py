@@ -40,19 +40,10 @@ app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 # Додаємо обробник для вибору квесту
 from telegram.ext import MessageHandler, filters
 
-def choose_quest_filter(message):
-    # Дозволяємо вибирати квест, якщо в context.user_data["open_quests"] є такий квест
-    context = message.application.context_types.context  # Отримуємо context
-    user_data = context.user_data
-    open_quests = user_data.get("open_quests", []) if user_data else []
-    return bool(open_quests) and any(q["quest_name"] == message.text for q in open_quests)
-
-
 
 # Додаємо обробник для кнопки "ОТРИМАТИ ПИТАННЯ"
 app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^Отримати питання$"), handle_get_question))
 
-app.add_handler(MessageHandler(choose_quest_filter, handle_choose_quest))
 
 app.add_handler(MessageHandler(filters.TEXT, handle_choose_quest))
 
