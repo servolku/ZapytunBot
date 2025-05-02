@@ -217,7 +217,7 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     distance = haversine(user_location.latitude, user_location.longitude, target_lat, target_lon)
-    if distance <= 20000:
+    if distance <= 20:
         options = target_question["options"]
         keyboard = [
             [InlineKeyboardButton(option, callback_data=str(idx))]
