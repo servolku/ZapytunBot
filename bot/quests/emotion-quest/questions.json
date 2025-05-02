@@ -13,6 +13,7 @@
       "correct": 1,
       "latitude": 50.748833,
       "longitude": 25.374415,
+      "location_radius": null,
       "question_image": "q1.jpg",
       "location_image": "l1.jpg"
     },
@@ -22,6 +23,7 @@
       "correct": 1,
       "latitude": 50.747968,
       "longitude": 25.374248,
+      "location_radius": null,
       "question_image": "q2.jpg",
       "location_image": "l2.jpg"
     },
@@ -31,6 +33,7 @@
       "correct": 2,
       "latitude": 50.747210,
       "longitude": 25.373794,
+      "location_radius": null,
       "question_image": "q3.jpg",
       "location_image": "l3.jpg"
     },
@@ -40,6 +43,7 @@
       "correct": 2,
       "latitude": 50.747876,
       "longitude": 25.373374,
+      "location_radius": null,
       "question_image": "q4.jpg",
       "location_image": "l4.jpg"
     },
@@ -49,6 +53,7 @@
       "correct": 0,
       "latitude": 50.748509,
       "longitude": 25.373786,
+      "location_radius": null,
       "question_image": "q5.jpg",
       "location_image": "l5.jpg"
     },
@@ -58,6 +63,7 @@
       "correct": 2,
       "latitude": 50.748846,
       "longitude": 25.373816,
+      "location_radius": null,
       "question_image": "q6.jpg",
       "location_image": "l6.jpg"
     },
@@ -67,6 +73,7 @@
       "correct": 0,
       "latitude": 50.747587,
       "longitude": 25.373549,
+      "location_radius": null,
       "question_image": "q7.jpg",
       "location_image": "l7.jpg"
     }
