@@ -1,1 +1,73 @@
 
+{
+  "quest_id": "emotion-quest",
+  "quest_name": "Квест про емоції людини",
+  "description": "Прокачай свій емоційний інтелект, відповідаючи на питання в різних локаціях!",
+  "is_open": true,
+  "random_order": true,
+  "questions": [
+    {
+      "question": "Дай відповідь на питання, що на картці",
+      "options": ["а", "б", "в"],
+      "correct": 1,
+      "latitude": 50.748833,
+      "longitude": 25.374415,
+      "question_image": "q1.jpg",
+      "location_image": "l1.jpg"
+    },
+    {
+      "question": "Дай відповідь на питання, що на картці",
+      "options": ["а", "б", "в"],
+      "correct": 1,
+      "latitude": 50.747968,
+      "longitude": 25.374248,
+      "question_image": "q2.jpg",
+      "location_image": "l2.jpg"
+    },
+    {
+      "question": "Дай відповідь на питання, що на картці",
+      "options": ["а", "б", "в"],
+      "correct": 2,
+      "latitude": 50.747210,
+      "longitude": 25.373794,
+      "question_image": "q3.jpg",
+      "location_image": "l3.jpg"
+    },
+    {
+      "question": "Дай відповідь на питання, що на картці",
+      "options": ["а", "б", "в"],
+      "correct": 2,
+      "latitude": 50.747876,
+      "longitude": 25.373374,
+      "question_image": "q4.jpg",
+      "location_image": "l4.jpg"
+    },
+    {
+      "question": "Дай відповідь на питання, що на картці",
+      "options": ["а", "б", "в"],
+      "correct": 0,
+      "latitude": 50.748509,
+      "longitude": 25.373786,
+      "question_image": "q5.jpg",
+      "location_image": "l5.jpg"
+    },
+    {
+      "question": "Дай відповідь на питання, що на картці",
+      "options": ["а", "б", "в"],
+      "correct": 2,
+      "latitude": 50.748846,
+      "longitude": 25.373816,
+      "question_image": "q6.jpg",
+      "location_image": "l6.jpg"
+    },
+    {
+      "question": "Дай відповідь на питання, що на картці",
+      "options": ["а", "б", "в"],
+      "correct": 0,
+      "latitude": 50.747587,
+      "longitude": 25.373549,
+      "question_image": "q7.jpg",
+      "location_image": "l7.jpg"
+    }
+  ]
+}
