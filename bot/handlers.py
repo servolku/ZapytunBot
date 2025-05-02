@@ -216,8 +216,12 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Для цього питання не задано координат.")
         return
 
+    # --- Визначаємо радіус похибки для питання або всього квесту ---
+    question_radius = target_question.get("location_radius")
+    location_radius = question_radius if question_radius is not None else data.get("location_radius", 30)
+
     distance = haversine(user_location.latitude, user_location.longitude, target_lat, target_lon)
-    if distance <= 30:
+    if distance <= location_radius:
         options = target_question["options"]
         keyboard = [
             [InlineKeyboardButton(option, callback_data=str(idx))]
@@ -238,7 +242,7 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(target_question["question"], reply_markup=reply_markup)
     else:
         await update.message.reply_text(
-            f"❌ Ви не знаходитеся в потрібній локації. Ваша відстань до цілі: {int(distance)} м. Спробуйте ще раз."
+            f"❌ Ви не знаходитеся в потрібній локації. Ваша відстань до цілі: {int(distance)} м (радіус: {location_radius} м). Спробуйте ще раз."
         )
 
 async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
