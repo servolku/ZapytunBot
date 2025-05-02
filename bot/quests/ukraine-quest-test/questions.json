@@ -4,7 +4,7 @@
   "description": "Відкрий для себе Україну, відповідаючи на питання в різних локаціях!",
   "is_open": true,
   "random_order": true,
-  "location_radius": 20000,   // <-- нове поле, наприклад 50 метрів
+  "location_radius": 20000,
   "questions": [
     {
       "question": "Яка столиця України?",
