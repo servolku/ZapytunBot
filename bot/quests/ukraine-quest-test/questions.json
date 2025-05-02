@@ -9,45 +9,45 @@
       "question": "Яка столиця України?",
       "options": ["Харків", "Київ", "Одеса", "Львів"],
       "correct": 1,
-      "latitude": 0.0,
-      "longitude": 0.0,
-      "question_image": "kyiv.jpg",
-      "location_image": "next_location1.jpg"
+      "latitude": 50.748833,
+      "longitude": 25.374415,
+      "question_image": "q1.jpg",
+      "location_image": "l1.jpg"
     },
     {
       "question": "Яка найдовша річка України?",
       "options": ["Дністер", "Дніпро", "Південний Буг", "Десна"],
       "correct": 1,
-      "latitude": 0.0,
-      "longitude": 0.0,
-      "question_image": null,
-      "location_image": "dnipro-location.jpg"
+      "latitude": 50.747968,
+      "longitude": 25.374248,
+      "question_image": "q2.jpg",
+      "location_image": "l2.jpg"
     },
     {
       "question": "Який український поет написав 'Заповіт'?",
       "options": ["Іван Франко", "Леся Українка", "Тарас Шевченко", "Павло Тичина"],
       "correct": 2,
-      "latitude": 0.0,
-      "longitude": 0.0,
-      "question_image": "shevchenko.jpg",
-      "location_image": "next_location2.jpg"
+      "latitude": 50.747210,
+      "longitude": 25.373794,
+      "question_image": "q3.jpg",
+      "location_image": "l3.jpg"
     },
     {
       "question": "Яке місто відоме як перша столиця України-Русі?",
       "options": ["Харків", "Київ", "Львів", "Чернігів"],
       "correct": 1,
-      "latitude": 0.0,
-      "longitude": 0.0,
-      "question_image": null,
-      "location_image": "kyiv-rus-location.jpg"
+      "latitude": 50.747868,
+      "longitude": 25.373378,
+      "question_image": "q4.jpg",
+      "location_image": "l4.jpg"
     },
     {
       "question": "Яка найвища гора України?",
       "options": ["Петрос", "Піп Іван", "Говерла", "Роман-Кош"],
       "correct": 2,
-      "latitude": 0.0,
-      "longitude": 0.0,
-      "question_image": "hoverla.jpg",
-      "location_image": "next_location3.jpg"
+      "latitude": 50.748509,
+      "longitude": 25.373786,
+      "question_image": "q5.jpg",
+      "location_image": "l5.jpg"
     }
   
