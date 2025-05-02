@@ -283,7 +283,7 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if next_location_image:
             image_path = os.path.join(quest_dir, next_location_image)
-            if ос.path.exists(image_path):
+            if os.path.exists(image_path):
                 with open(image_path, "rb") as photo:
                     await query.message.reply_photo(photo=photo, caption=text)
             else:
