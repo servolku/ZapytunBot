@@ -12,6 +12,7 @@
       "correct": 1,
       "latitude": 50.748833,
       "longitude": 25.374415,
+      "location_radius": null,
       "question_image": "q1.jpg",
       "location_image": "l1.jpg"
     },
@@ -21,6 +22,7 @@
       "correct": 1,
       "latitude": 50.747968,
       "longitude": 25.374248,
+      "location_radius": null
       "question_image": "q2.jpg",
       "location_image": "l2.jpg"
     },
@@ -30,6 +32,7 @@
       "correct": 2,
       "latitude": 50.747210,
       "longitude": 25.373794,
+      "location_radius": null
       "question_image": "q3.jpg",
       "location_image": "l3.jpg"
     },
@@ -39,6 +42,7 @@
       "correct": 1,
       "latitude": 50.747868,
       "longitude": 25.373378,
+      "location_radius": null
       "question_image": "q4.jpg",
       "location_image": "l4.jpg"
     },
@@ -48,6 +52,7 @@
       "correct": 2,
       "latitude": 50.748509,
       "longitude": 25.373786,
+      "location_radius": null
       "question_image": "q5.jpg",
       "location_image": "l5.jpg"
     }
